@@ -1,0 +1,7 @@
+include *.md
+include *.txt
+include LICENSE
+include NOTICE
+recursive-include BigStash *.py
+include versioneer.py
+include BigStash/version.py
