@@ -43,3 +43,4 @@ spell.*
 
 # Sphinx documentation
 docs/_build/
+boto.cfg
