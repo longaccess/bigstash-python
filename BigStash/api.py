@@ -21,10 +21,10 @@ class API(object):
         self.secret = secret
         self.base_url = base_url
 
-    def _AuthRequest(self):
+    def _AuthRequest(self, url):
         if self.key and self.secret:
             signature_headers = ['(request-line)', 'date', 'host']
-            host = urlparse(URL).netloc
+            host = urlparse(self.base_url + url).netloc
             headers.update({
                 'Host': host,
                 'X-Deepfreeze-Api-Key': self.key,
@@ -38,30 +38,37 @@ class API(object):
 
     def GetArchiveList(self):
         url = self.base_url + 'archives/'
-        auth = self._AuthRequest()
+        auth = self._AuthRequest(url)
         try:
             req = requests.get(url, auth=auth, headers=headers)
             return json.loads(req.content)
-        except requests.RequestsException as e:
+        except requests.RequestsException:
             pass
-            
-    def GetUser(User):
+
+    def GetUser(self, User):
         url = self.base_url + 'user/'
+        return requests.get(url, auth=self._AuthRequest(url), headers=headers)
 
     def GetArchive(self, archive_id):
         url = self.base_url + 'archives/' + archive_id + '/'
+        return requests.get(url, auth=self._AuthRequest(url), headers=headers)
 
     def GetUpload(self, upload_id):
         url = self.base_url + 'uploads/' + upload_id + '/'
+        return requests.get(url, auth=self._AuthRequest(url), headers=headers)
 
     def CreateArchive(self, title=None, size=None, user_id=None):
         url = self.base_url + 'archives/'
+        return requests.get(url, auth=self._AuthRequest(url), headers=headers)
 
     def CreateUpload(self):
         url = self.base_url + 'uploads/'
+        return requests.get(url, auth=self._AuthRequest(url), headers=headers)
 
     def UpdateUpload(self, upload_id):
         url = self.base_url + 'uploads/' + upload_id + '/'
+        return requests.get(url, auth=self._AuthRequest(url), headers=headers)
 
     def DestroyUpload(self, upload_id):
         url = self.base_url + 'uploads/' + upload_id + '/'
+        return requests.get(url, auth=self._AuthRequest(url), headers=headers)
