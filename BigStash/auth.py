@@ -23,8 +23,14 @@ class BigStashAuth(object):
 
     def GetAPIKey(self, username=None, password=None):
         url = self.base_url + '/tokens/'
-        req = requests.post(url, auth=(username, password),
-                            data=json.dumps({"name": "curl.py temp token"}),
-                            headers=headers)
-        r = json.loads(req.content)
+        try:
+            req = requests.post(url, auth=(username, password),
+                                data=json.dumps({"name": "curl.py temp token"}),
+                                headers=headers)
+            r = json.loads(req.content)
+        except RequestException:
+            raise BigStashError
+        except ValueError:
+            raise BigStashError
+
         return (r.get("key", None), r.get("secret", None))

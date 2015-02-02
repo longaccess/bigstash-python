@@ -37,8 +37,10 @@ class BigStashAPI(object):
         try:
             req = requests.get(url, auth=self._AuthRequest(url), headers=headers)
             return json.loads(req.content)
-        except requests.RequestsException:
-            pass
+        except RequestException:
+            raise BigStashError
+        except ValueError:
+            raise BigStashError
 
     def GetUser(self, User):
         url = self.base_url + 'user/'
