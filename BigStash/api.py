@@ -1,11 +1,14 @@
 import json
 import requests
+import time
 
+from six.moves.urllib.parse import urlparse
+from BigStash import __version__
 from httpsig.requests_auth import HTTPSignatureAuth
 
 
 headers = {
-    'User-agent': 'BigStash Python SDK v{}'.format(version),
+    'User-agent': 'BigStash Python SDK v{}'.format(__version__),
     'Accept': 'application/vnd.deepfreeze+json',
     'Content-Type': 'application/vnd.deepfreeze+json'
 }
