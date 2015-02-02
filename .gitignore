@@ -45,3 +45,6 @@ spell.*
 # Sphinx documentation
 docs/_build/
 boto.cfg
+
+# coverage reports
+BigStash/cover
