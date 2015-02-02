@@ -1,6 +1,6 @@
 import json
 import requests
-from BigStash import version
+from BigStash import __version__
 
 
 class Auth(object):
@@ -15,7 +15,7 @@ class Auth(object):
 
     def GetAPIKey(self, username=None, password=None):
         headers = {
-            'User-agent': 'BigStash Python SDK v{}'.format(version),
+            'User-agent': 'BigStash Python SDK v{}'.format(__version__),
             'Accept': 'application/vnd.deepfreeze+json',
             'Content-Type': 'application/vnd.deepfreeze+json'
         }
