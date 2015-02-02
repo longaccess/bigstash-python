@@ -1,3 +1,5 @@
 [report]
+omit =
+    *version.py*
 exclude_lines = 
     pragma: no cover
