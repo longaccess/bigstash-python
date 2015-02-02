@@ -11,15 +11,15 @@ class AuthTest(TestCase):
         super(AuthTest, self).tearDown()
 
     def _makeit(self, *args, **kwargs):
-        from BigStash.auth import Auth
-        return Auth(*args, **kwargs)
+        from BigStash import BigStashAuth
+        return BigStashAuth(*args, **kwargs)
 
     def test_auth_class(self):
         assert self._makeit(self.getUniqueString(),
                             self.getUniqueString(),
                             self.getUniqueString())
 
-    def test_do_login(self, stdout):
+    def test_do_login(self):
         requests = Mock()
         requests.post.return_value = self.getUniqueString()
         api_key = self.getUniqueString()
