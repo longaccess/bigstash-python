@@ -33,7 +33,6 @@ class BigStashAPI(object):
 
     def GetArchives(self):
         url = self.base_url + 'archives/'
-        auth = self._AuthRequest(url)
         try:
             req = requests.get(url, auth=self._AuthRequest(url), headers=headers)
             return json.loads(req.content)
@@ -44,28 +43,90 @@ class BigStashAPI(object):
 
     def GetUser(self, User):
         url = self.base_url + 'user/'
-        return requests.get(url, auth=self._AuthRequest(url), headers=headers)
+        try:
+            req = requests.get(url, auth=self._AuthRequest(url), headers=headers)
+            return json.loads(req.content)
+        except RequestException:
+            raise BigStashError
+        except ValueError:
+            raise BigStashError
 
     def GetArchive(self, archive_id):
-        url = self.base_url + 'archives/' + archive_id + '/'
-        return requests.get(url, auth=self._AuthRequest(url), headers=headers)
+        url = self.base_url + 'archives/%d/' % archive_id
+        try:
+            req = requests.get(url, auth=self._AuthRequest(url), headers=headers)
+            return json.loads(req.content)
+        except RequestException:
+            raise BigStashError
+        except ValueError:
+            raise BigStashError
+
+    def GetArchiveFiles(self, archive_id):
+        url = self.base_url + 'archives/%d/files/' % archive_id
+        try:
+            req = requests.get(url, auth=self._AuthRequest(url), headers=headers)
+            return json.loads(req.content)
+        except RequestException:
+            raise BigStashError
+        except ValueError:
+            raise BigStashError
 
     def GetUpload(self, upload_id):
-        url = self.base_url + 'uploads/' + upload_id + '/'
-        return requests.get(url, auth=self._AuthRequest(url), headers=headers)
+        url = self.base_url + 'uploads/%d/' % upload_id
+        try:
+            req = requests.get(url, auth=self._AuthRequest(url), headers=headers)
+            return json.loads(req.content)
+        except RequestException:
+            raise BigStashError
+        except ValueError:
+            raise BigStashError
 
     def CreateArchive(self, title=None, size=None, user_id=None):
         url = self.base_url + 'archives/'
-        return requests.get(url, auth=self._AuthRequest(url), headers=headers)
+        data = {
+            'title': title,
+            'size': size,
+            'user_id': user_id
+        }
+        try:
+            req = requests.post(url, auth=self._AuthRequest(url),
+                                data=data, headers=headers)
+            return json.loads(req.content)
+        except RequestException:
+            raise BigStashError
+        except ValueError:
+            raise BigStashError
 
-    def CreateUpload(self):
+    def CreateUpload(self, archive_id):
         url = self.base_url + 'uploads/'
-        return requests.get(url, auth=self._AuthRequest(url), headers=headers)
+        data = {'archive_id': archive_id}
+        try:
+            req = requests.post(url, auth=self._AuthRequest(url),
+                                data=data, headers=headers)
+            return json.loads(req.content)
+        except RequestException:
+            raise BigStashError
+        except ValueError:
+            raise BigStashError
 
     def UpdateUpload(self, upload_id):
-        url = self.base_url + 'uploads/' + upload_id + '/'
-        return requests.get(url, auth=self._AuthRequest(url), headers=headers)
+        url = self.base_url + 'uploads/%d/' % upload_id
+        try:
+            req = requests.patch(url, auth=self._AuthRequest(url),
+                                 headers=headers)
+            return json.loads(req.content)
+        except RequestException:
+            raise BigStashError
+        except ValueError:
+            raise BigStashError
 
     def DestroyUpload(self, upload_id):
-        url = self.base_url + 'uploads/' + upload_id + '/'
-        return requests.get(url, auth=self._AuthRequest(url), headers=headers)
+        url = self.base_url + 'uploads/%d/' % upload_id
+        try:
+            req = requests.delete(url, auth=self._AuthRequest(url),
+                                  headers=headers)
+            return json.loads(req.content)
+        except RequestException:
+            raise BigStashError
+        except ValueError:
+            raise BigStashError
