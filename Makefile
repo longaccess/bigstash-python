@@ -14,5 +14,5 @@ lint-python:
 
 test:
 	@echo "Running nosetests -sv"
-	nosetests -sv
+	nosetests -sv BigStash.t
 	@echo ""
