@@ -130,3 +130,13 @@ class BigStashAPI(object):
             raise BigStashError
         except ValueError:
             raise BigStashError
+
+    def GetUser(self):
+        url = self.base_url + 'user/'
+        try:
+            req = requests.get(url, auth=self._AuthRequest(url), headers=headers)
+            return json.loads(req.content)
+        except RequestException:
+            raise BigStashError
+        except ValueError:
+            raise BigStashError
