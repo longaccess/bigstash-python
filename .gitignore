@@ -48,3 +48,7 @@ boto.cfg
 
 # coverage reports
 BigStash/cover
+
+# robohydra
+node_modules
+robohydra.log
