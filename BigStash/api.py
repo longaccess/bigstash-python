@@ -90,7 +90,7 @@ class BigStashAPI(object):
         }
         try:
             req = requests.post(url, auth=self._AuthRequest(url),
-                                data=data, headers=headers)
+                                data=json.dumps(data), headers=headers)
             return json.loads(req.content)
         except RequestException:
             raise BigStashError
@@ -98,11 +98,10 @@ class BigStashAPI(object):
             raise BigStashError
 
     def CreateUpload(self, archive_id):
-        url = self.base_url + 'uploads/'
-        data = {'archive_id': archive_id}
+        url = self.base_url + 'archives/%d/upload/' % archive_id
         try:
             req = requests.post(url, auth=self._AuthRequest(url),
-                                data=data, headers=headers)
+                                headers=headers)
             return json.loads(req.content)
         except RequestException:
             raise BigStashError
@@ -125,10 +124,7 @@ class BigStashAPI(object):
         try:
             req = requests.delete(url, auth=self._AuthRequest(url),
                                   headers=headers)
-            return json.loads(req.content)
         except RequestException:
-            raise BigStashError
-        except ValueError:
             raise BigStashError
 
     def GetUser(self):
