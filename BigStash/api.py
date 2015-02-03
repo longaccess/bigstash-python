@@ -18,7 +18,7 @@ class BigStashAPI(object):
 
     def _AuthRequest(self, url):
         if self.key and self.secret:
-            signature_headers = ['(request-line)', 'date', 'host']
+            signature_headers = ['(request-target)', 'date', 'host']
             host = urlparse(url).netloc
             headers.update({
                 'Host': host,
