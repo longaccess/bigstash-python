@@ -6,12 +6,12 @@ class ArchivesTestCase(TestCase):
         super(ArchivesTestCase, self).setUp()
         api_key = self.getUniqueString()
         api_secret = self.getUniqueString()
-        url = self.getUniqueString()
+        url = 'http://localhost:3000/api/v1/'
         self.api = self._makeit(api_key, api_secret, url)
 
     def tearDown(self):
         del self.api
-        super(ArchivesTestCase, self).setUp()
+        super(ArchivesTestCase, self).tearDown()
 
     def _makeit(self, *args, **kwargs):
         from BigStash import BigStashAPI
@@ -20,13 +20,22 @@ class ArchivesTestCase(TestCase):
     def test_get_archive_list(self):
         archives = self.api.GetArchives()
         self.assertEqual(len(archives['results']), 2)
-        self.assertEqual(archives[0].title, 'Photos')
-        self.assertEqual(archives[1].title, 'Other')
+        self.assertEqual(archives['results'][0]['title'], 'Photos')
+        self.assertEqual(archives['results'][1]['title'], 'Other')
 
     def test_get_archive_details(self):
-        key = self.getUniqueString()
-        archive = self.api.GetArchive(key)
+        archive_id = 1
+        archive = self.api.GetArchive(archive_id)
         keys = [ "status", "key", "size", "checksum",
                  "created", "url", "upload", "title"]
-        self.assertListEqual(keys, archive.keys())
-        self.assertEqual(archive['key'], self.key)
+        self.assertListEqual(sorted(keys), sorted(archive.keys()))
+
+    def test_create_archive(self):
+        title = self.getUniqueString()
+        size = 300000
+        user_id = 1
+        archive = self.api.CreateArchive(title=title, size=size, user_id=user_id)
+        keys = [ "status", "key", "size", "checksum",
+                 "created", "url", "upload", "title"]
+        self.assertListEqual(sorted(keys), sorted(archive.keys()))
+        self.assertEqual(archive['title'], title)
