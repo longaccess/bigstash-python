@@ -1,7 +1,6 @@
 var heads               = require('robohydra').heads,
     RoboHydraHead       = require("robohydra").heads.RoboHydraHead,
     RoboHydraHeadStatic = heads.RoboHydraHeadStatic,
-    token               = require('./tokens.js').token,
     apiPrefix           = "/api/v1";
 
 
@@ -60,6 +59,23 @@ exports.getBodyParts = function(config, modules) {
       "avatar48": "http://gravatar.com/avatar/58fc8f2e1ffa8f4b01a86a6c66cb2100?d=mm&s=48"
     }
   }
+  upload = {
+    'archive': 'http://localhost:8000/api/v1/archives/83/',
+    'comment': '',
+    'created': '2015-02-04T11:53:35.237Z',
+    's3': {
+      'bucket': '',
+      'prefix': '/upload/2015-02-04-11-53-18/',
+      'token_access_key': '',
+      'token_expiration': '2015-02-05T11:53:36Z',
+      'token_secret_key': '',
+      'token_session': '',
+      'token_uid': 'lacli'
+    },
+    'status': 'pending',
+    'url': 'http://localhost:8000/api/v1/uploads/18/'
+  }
+
   function meta(n){
     return {
       limit: 20,
@@ -78,41 +94,63 @@ exports.getBodyParts = function(config, modules) {
       new RoboHydraHeadStatic({
         path: apiPrefix + '/archives/1/',
         content: archives.Other
-      }),  
-      new RoboHydraHeadStatic({
-        path: apiPrefix + '/archives/',
-        content: {
-          meta: meta(2),
-          results: [
-            archives.Photos,
-            archives.Other
-          ]
-        }
-      }),  
+      }), 
       new RoboHydraHead({
         path: apiPrefix + '/archives/',
         handler: function(req, res, next) {
-          modules.assert.equal(req.method, "POST", "Upload resource supports only POST")
-          content = JSON.parse(req.rawBody)
-          modules.assert.ok("title" in content)
-          modules.assert.ok("user_id" in content)
-          modules.assert.ok("size" in content)
-          res.status = '201';
-          date = new Date();
-          var archive = {
-            "status" : "creating",
-            "key" : "58-CXSS2Q",
-            "size" : content.size,
-            "checksum" : null,
-            "created" : date,
-            "url" : "http://stage.deepfreeze.io/api/v1/archives/58/",
-            "upload" : "http://stage.deepfreeze.io/api/v1/archives/58/upload/",
-            "title": content.title 
+          if (req.method == 'POST'){
+            content = JSON.parse(req.rawBody)
+            modules.assert.ok("title" in content)
+            modules.assert.ok("user_id" in content)
+            modules.assert.ok("size" in content)
+            res.status = '201';
+            date = new Date();
+            var archive = {
+              "status" : "creating",
+              "key" : "58-CXSS2Q",
+              "size" : content.size,
+              "checksum" : null,
+              "created" : date,
+              "url" : "http://stage.deepfreeze.io/api/v1/archives/58/",
+              "upload" : "http://stage.deepfreeze.io/api/v1/archives/58/upload/",
+              "title": content.title 
+            }
+            res.write(JSON.stringify(archive));
+            res.end(); 
+          } else if (req.method == 'GET'){
+            var content = {
+              meta: meta(2),
+              results: [
+                archives.Photos,
+                archives.Other
+              ]
+            }
+            res.status = '200';
+            res.write(JSON.stringify(content));
+            res.end(); 
           }
-          res.write(JSON.stringify(archive));
-          res.end(); 
         }
-      })  
+      }),
+      new RoboHydraHead({
+        path: apiPrefix + '/uploads/1/',
+        handler: function(req, res, next) {
+          if (req.method == 'GET'){
+            res.status = '200';
+            res.write(JSON.stringify(upload));
+            res.end();
+          } else if (req.method == 'PATCH'){
+            content = JSON.parse(req.rawBody)
+            modules.assert.ok("status" in content)
+            var patched_upload = upload;
+            patched_upload.status = content.status;
+            res.write(JSON.stringify(patched_upload));
+            res.end();
+          } else if (req.method == 'DELETE'){
+            res.status = '204';
+            res.end();
+          }
+        }
+      })
     ]
   }
 }
