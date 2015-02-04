@@ -108,11 +108,12 @@ class BigStashAPI(object):
         except ValueError:
             raise BigStashError
 
-    def UpdateUpload(self, upload_id):
+    def UpdateUpload(self, upload_id, status=None):
         url = self.base_url + 'uploads/%d/' % upload_id
+        data = {'status': status }
         try:
             req = requests.patch(url, auth=self._AuthRequest(url),
-                                 headers=headers)
+                                 data=json.dumps(data), headers=headers)
             return json.loads(req.content)
         except RequestException:
             raise BigStashError
