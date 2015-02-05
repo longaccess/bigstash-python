@@ -1,5 +1,5 @@
 [report]
 omit =
-    *version.py*
+    *version.py*,BigStash/t/*
 exclude_lines = 
     pragma: no cover
