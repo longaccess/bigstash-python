@@ -1,6 +1,7 @@
 develop: setup-git
 	pip install peep
-	peep install -r requirements/test.txt
+	peep install -r requirements/base.txt
+	pip install --pre -r requirements/test.txt
 	pip install --no-deps -e .
 
 setup-git:
