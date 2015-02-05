@@ -5,5 +5,13 @@ requests==2.5.1
 httpsig_cffi==15.0.0
 # sha256: QYqTw5en7asj5ViNvAZ6x0pyPts9VBvUk295R252Rdo
 six==1.9.0
-# sha256: 8s4emJsnLPy2d2FnY-Ci5-xlnv-meoiqkrOmVSj2Cjw
-pycrypto==2.6.1
+# sha256: 3dO4RIKKRbp92az3nWNC2z6gLzQIeLra1YBeDGSxDpM
+wrapt==1.10.2
+# sha256: -rf83eNg7GYURC0DIdzQ7_XkNUTLMNl16ddakUpM33g
+cryptography==0.7.2
+# sha256: JTLZ46-ePG0PcQ_JiwKVtWPH85z9l90iQr02-_SQBhA
+cffi==0.8.6
+# sha256: lX2YtmHAtktYCrb5SxJeCbZxQVTuUd5AvKFtPwB2uGw
+pycparser==2.10
+# sha256: m9-s9UO68jUN92E-s39ZioAvNGmFyg3BVIvmSUFA_f8
+enum==0.4.4

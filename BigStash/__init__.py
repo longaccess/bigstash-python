@@ -4,3 +4,6 @@ del get_versions
 
 from .auth import BigStashAuth
 from .api import BigStashAPI
+from .conf import BigStashAPISettings
+
+__all__ = ['__version__', 'BigStashAuth', 'BigStashAPI', 'BigStashAPISettings']
