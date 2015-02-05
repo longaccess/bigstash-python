@@ -2,7 +2,7 @@ import json
 import requests
 import time
 
-from httpsig.requests_auth import HTTPSignatureAuth
+from httpsig_cffi.requests_auth import HTTPSignatureAuth
 from requests.exceptions import RequestException
 from six.moves.urllib.parse import urlparse
 from .error import BigStashError

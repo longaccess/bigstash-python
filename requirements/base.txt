@@ -1,8 +1,8 @@
 -i https://pypi.longaccess.io/root/longaccess/+simple/
 # sha256: HwRtz17HEu076GhLnzPJW3bijNHIJdsPXhVXv9h7N0U
 requests==2.5.1
-# sha256: jycHDaDJpWoSDiNFZrjr6Y8zVsztkyWcEl4nTz25Y58
-httpsig==1.1.0
+# sha256: Ys_uA7ikOq77K1tNpyUU1YHztSeiShMWFSwIBS7sl5U
+httpsig_cffi==15.0.0
 # sha256: QYqTw5en7asj5ViNvAZ6x0pyPts9VBvUk295R252Rdo
 six==1.9.0
 # sha256: 8s4emJsnLPy2d2FnY-Ci5-xlnv-meoiqkrOmVSj2Cjw
