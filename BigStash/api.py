@@ -10,6 +10,7 @@ class BigStashAPI(BigStashAPIBase):
     ARCHIVE_LIST = "archives"
     ARCHIVE_DETAIL = "archives/{id}"
     ARCHIVE_UPLOAD = "archives/{id}/upload"
+    TOKEN_DETAIL = "tokens/{id}"
 
     def __init__(self, key=None, secret=None, *args, **kwargs):
         """Initialize a :class:`BigStashAPI <BigStashAPI>` object.
@@ -102,6 +103,10 @@ class BigStashAPI(BigStashAPIBase):
         :param upload_id: the upload id
         """
         return self.delete(self.UPLOAD_DETAIL.format(id=upload_id))
+
+    @no_content_response
+    def DestroyAPIKey(self, token_id):
+        return self.delete(self.TOKEN_DETAIL.format(id=token_id))
 
 
 if __name__ == "__main__":
