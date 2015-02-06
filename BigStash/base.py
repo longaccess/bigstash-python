@@ -72,7 +72,7 @@ class BigStashAPIBase(object):
     def get(self, path, *args, **kwargs):
         """Sends a GET request, returns result. Assumes a JSON response.
 
-        :param url: URL to GET
+        :param path: URL to GET
         :param \*\*kwargs: Optional arguments that ``requests.get`` takes.
         """
         self.add_date(kwargs.setdefault('headers', {}))
@@ -81,8 +81,26 @@ class BigStashAPIBase(object):
     def post(self, path, *args, **kwargs):
         """Sends a POST request, returns result.
 
-        :param url: URL to GET
-        :param \*\*kwargs: Optional arguments that ``requests.get`` takes.
+        :param path: URL to POST
+        :param \*\*kwargs: Optional arguments that ``requests.post`` takes.
         """
         self.add_date(kwargs.setdefault('headers', {}))
         return self._session.post(self.api_url(path), *args, **kwargs)
+
+    def patch(self, path, *args, **kwargs):
+        """ Sends a PATCH request, returns results.
+
+        :param path: URL to PATCH
+        :param \*\*kwargs: Optional arguments that ``requests.patch`` takes.
+        """
+        self.add_date(kwargs.setdefault('headers', {}))
+        return self._session.patch(self.api_url(path), *args, **kwargs)
+
+    def delete(self, path, *args, **kwargs):
+        """ Sends a DELETE request, returns results.
+
+        :param path: URL to DELETE
+        :param \*\*kwargs: Optional arguments that ``requests.delete`` takes.
+        """
+        self.add_date(kwargs.setdefault('headers', {}))
+        return self._session.delete(self.api_url(path), *args, **kwargs)
