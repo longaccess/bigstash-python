@@ -1,6 +1,6 @@
 from httpsig_cffi.requests_auth import HTTPSignatureAuth
 from BigStash.base import BigStashAPIBase
-from BigStash.decorators import json_response
+from BigStash.decorators import json_response, no_content_response
 
 
 class BigStashAPI(BigStashAPIBase):
@@ -83,7 +83,7 @@ class BigStashAPI(BigStashAPIBase):
 
         :param archive_id: the archive id
         """
-        return self.post(self.ARCHIVE_UPLOAD.format(archive_id))
+        return self.post(self.ARCHIVE_UPLOAD.format(id=archive_id))
 
     @json_response
     def UpdateUploadStatus(self, upload_id, status):
@@ -92,16 +92,16 @@ class BigStashAPI(BigStashAPIBase):
         :param upload_id: the upload id
         :param status: the new upload status
         """
-        return self.patch(self.UPLOAD_DETAIL.format(upload_id),
+        return self.patch(self.UPLOAD_DETAIL.format(id=upload_id),
                           json={"status": status})
 
-    @json_response
+    @no_content_response
     def CancelUpload(self, upload_id):
         """ Cancel an upload
 
         :param upload_id: the upload id
         """
-        return self.delete(self.UPLOAD_DETAIL.format(upload_id))
+        return self.delete(self.UPLOAD_DETAIL.format(id=upload_id))
 
 
 if __name__ == "__main__":
