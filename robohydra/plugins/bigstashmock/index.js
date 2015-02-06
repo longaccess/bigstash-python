@@ -60,7 +60,7 @@ exports.getBodyParts = function(config, modules) {
     }
   }
   upload = {
-    'archive': 'http://localhost:8000/api/v1/archives/83/',
+    'archive': 'http://localhost:8000/api/v1/archives/1/',
     'comment': '',
     'created': '2015-02-04T11:53:35.237Z',
     's3': {
@@ -73,7 +73,7 @@ exports.getBodyParts = function(config, modules) {
       'token_uid': 'lacli'
     },
     'status': 'pending',
-    'url': 'http://localhost:8000/api/v1/uploads/18/'
+    'url': 'http://localhost:8000/api/v1/uploads/1/'
   }
 
   function meta(n){
@@ -94,6 +94,10 @@ exports.getBodyParts = function(config, modules) {
       new RoboHydraHeadStatic({
         path: apiPrefix + '/archives/1/',
         content: archives.Other
+      }), 
+      new RoboHydraHeadStatic({
+        path: apiPrefix + '/archives/1/upload/',
+        content: upload
       }), 
       new RoboHydraHead({
         path: apiPrefix + '/archives/',
