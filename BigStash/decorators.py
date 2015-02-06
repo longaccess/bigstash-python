@@ -9,7 +9,16 @@ def json_response(wrapped, instance, args, kwargs):
         r = wrapped(*args, **kwargs)
         r.raise_for_status()
         return r.json()
-    except RequestException:
-        raise BigStashError
-    except ValueError:
-        raise BigStashError
+    except RequestException as e:
+        raise BigStashError(e)
+    except ValueError as e:
+        raise BigStashError(e)
+
+
+@decorator
+def no_content_response(wrapped, instance, args, kwargs):
+    try:
+        r = wrapped(*args, **kwargs)
+        r.raise_for_status()
+    except RequestException as e:
+        raise BigStashError(e)
