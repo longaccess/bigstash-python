@@ -69,7 +69,7 @@ class BigStashAPI(BigStashAPIBase):
         return self.get(self.UPLOAD_DETAIL.format(id=upload_id))
 
     @json_response
-    def CreateArchive(self, *kwargs):
+    def CreateArchive(self, **kwargs):
         """ Create a new archive
 
         :param title: the archive title
