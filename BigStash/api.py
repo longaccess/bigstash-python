@@ -106,6 +106,10 @@ class BigStashAPI(BigStashAPIBase):
 
     @no_content_response
     def DestroyAPIKey(self, token_id):
+        """ Delete an API key
+
+        :param token_id: the token id
+        """
         return self.delete(self.TOKEN_DETAIL.format(id=token_id))
 
 
