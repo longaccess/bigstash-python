@@ -81,19 +81,22 @@ exports.getBodyParts = function(config, modules) {
           "id": 1, 
           "verb": "<a href=\"/account/\">Account</a>: Registered.", 
           "created": "2015-02-13T10:52:46Z", 
-          "status": "info"
+          "status": "info",
+          "href": "https://www.bigstash.co/account/"
       },
       "ArchiveFrozen": {
           "id": 2,
           "verb": "Archive <a href=\"https://www.bigstash.co/a/17200-NUU9ZW\">17200-NUU9ZW</a>: Archived",
           "created": "2015-02-15T10:37:05Z",
-          "status": "success"
+          "status": "success",
+          "href": "https://www.bigstash.co/a/17200-NUU9ZW/"
       },
       "ArchiveReadyForDownload": {
           "id": 3,
           "verb": "Archive <a href=\"https://www.bigstash.co/a/17743-23524W\">17743-23524W</a>: Archive is ready to <a href=\"/o/download/1837/CbKNaHV79iP7kZ4NE6U28U/\">download</a>",
           "created": "2015-02-18T11:22:48Z",
-          "status": "info"
+          "status": "info",
+          "href": "https://www.bigstash.co/a/17743-23524W/"
       }
   }
 
