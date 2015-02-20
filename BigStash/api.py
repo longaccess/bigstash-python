@@ -41,11 +41,16 @@ class BigStashAPI(BigStashAPIBase):
         super(BigStashAPI, self).__init__(auth=auth, *args, **kwargs)
 
     @json_response
-    def GetArchives(self):
+    def GetArchives(self, page=None):
         """
         Get a list of archives
+
+        :param page: the page param for paginated results
         """
-        return self.get(self.ARCHIVE_LIST)
+        params = {}
+        if page:
+            params.update({'page': page})
+        return self.get(self.ARCHIVE_LIST, params=params)
 
     @json_response
     def GetUser(self):
