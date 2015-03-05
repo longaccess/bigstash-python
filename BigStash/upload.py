@@ -1,8 +1,9 @@
 import os
-import json
 import hashlib
 import re
 import logging
+from datetime import datetime
+from BigStash import BigStashError
 
 
 class Upload(object):
@@ -12,7 +13,7 @@ class Upload(object):
     MORE_INVALID_CHARS_RE = re.compile(
         r'[^\u0009\u000a\u000d\u0020-\uD7FF\uE000-\uFFFD]')
     TEMP_FILE_RE = re.compile(r'^~\$|\.~|~.*\.tmp')
-    TRAILING_CHAR_RE = re.compile(r'\.*|\s*$')
+    TRAILING_CHAR_RE = re.compile(r'\.+|\s+$')
     INVALID_FILES = ['desktop.ini', 'thumbs.db', '.ds_store', 'icon\\r',
                      '.dropbox', '.dropbox.attr']
     INVALID_CHAR_MSG = 'Invalid characters in path'
@@ -27,69 +28,78 @@ class Upload(object):
         if not paths:
             raise TypeError("You must provide at least a file path")
         self.api = api
-        self.paths = paths
+        self.paths = [os.path.abspath(p) for p in paths]
+        self.basepath = os.path.commonprefix(self.paths)
         self.invalid_paths = []
         self.total_size = 0
 
+    def archive(self, title=''):
+        title = title if title else self._get_title()
+        files_meta = self._get_files_meta(self.paths)
+        if self.invalid_paths:
+            logging.info('There were invalid files in your selection')
+            return
+        try:
+            a = self.api.CreateArchive(title=title, size=self.total_size)
+            u = self.CreateUpload(a.id)
+            manifest = {
+                'archiveid': a.id,
+                'userid': a.user.id,
+                'files': files_meta
+            }
+            self.api.UploadManifest(u.id, files=manifest)
+        except BigStashError:
+            logging.error("Couldn't create upload")
+
     def _get_file_meta(self, path):
-        meta = {
+        """ Create the file meta dictionary to be included in the manifest
+
+        :param path: the absolute path of the file
+        """
+        file_meta = {
+            'key_name': self._get_key_name(path),
+            'file_name': os.path.basename(path),
             'full_path': path,
             'size': os.path.getsize(path),
+            'last_modified': os.path.getmtime(path),
             'md5': hashlib.md5(open(path, 'rb').read()).hexdigest()
         }
-        return meta
+        return file_meta
 
-    def _create_manifest(self, paths):
-        all_files = []
-        total_size = 0
-        for path in paths:
+    def _get_files_meta(self):
+        """
+        Traverse the given paths and construct the total metadata stracture
+        """
+        files_meta = []
+        for path in self.paths:
+            if not os.path.exists(path):
+                raise IOError('File "{}" does not exist'.format(path))
             if os.path.isdir(path):
                 for r, _, files in os.walk(path):
                     for f in files:
                         fpath = os.path.join(r, f)
                         if self._is_valid(fpath):
-                            all_files.append(self._get_file_meta(fpath))
+                            files_meta.append(self._get_file_meta(fpath))
                             self.total_size += os.path.getsize(fpath)
             elif os.path.isfile(path):
                 if self._is_valid(path):
-                    all_files.append(self._get_file_meta(path))
-                    self.total_size += os.getsize(path)
-        try:
-            man = open(self.MANIFEST_FILE, 'w+')
-            man.write(json.dumps(all_files))
-            return True
-        except IOError:
-            logging.error("Error writing manifest")
-        finally:
-            man.close()
-        return False
-
-    def archive(self, title=''):
-        success = self.create_manifest(self.paths)
-        if not success or self.invalid_paths:
-            logging.info('Something went wrong')
-            return
-        if not title:
-            title = self._get_title()
-        try:
-            a = self.api.CreateArchive(title=title, size=self.total_size)
-            u = self.CreateUpload(a.id)
-            self._sendManifest(u.id)
-        except:
-            logging.error("Couldn't create upload")
-
-    def _send_manifest(self, upload_id):
-        self.api.UploadManifest(upload_id, self.MANIFEST_FILE)
+                    files_meta.append(self._get_file_meta(path))
+                    self.total_size += os.path.getsize(path)
+        return files_meta
 
     def _is_valid(self, path):
+        """ Check if file path is valid
+
+        :param path: the absolute path of the file
+        """
         filename = os.path.basename(path)
-        if self.INVALID_CHAR_RE.search(path):
+        if self.INVALID_CHAR_RE.match(filename):
             self.invalid_paths.append(
                 {'path': path, 'msg': self.INVALID_CHAR_MSG})
-        elif self.TRAILING_CHAR_RE.match(path):
+        elif self.TRAILING_CHAR_RE.match(filename):
             self.invalid_paths.append(
                 {'path': path, 'msg': self.TRAILING_CHARS_MSG})
-        elif self.MORE_INVALID_CHAR_RE.match(path):
+        elif self.MORE_INVALID_CHARS_RE.match(filename):
             self.invalid_paths.append(
                 {'path': path, 'msg': self.INVALID_CHAR_MSG})
         elif os.path.islink(path):
@@ -98,13 +108,28 @@ class Upload(object):
         elif self.TEMP_FILE_RE.match(filename):
             self.invalid_paths.append(
                 {'path': path, 'msg': self.TEMP_FILE_MSG})
-        elif filename in self.INVALID_PATH:
+        elif filename in self.INVALID_FILES:
             self.invalid_paths.append(
                 {'path': path, 'msg': self.INVALID_FILE_MSG})
         else:
             return True
         return False
 
+    def _get_key_name(self, path):
+        """ Return the appropriate s3 key name for a file
+
+        :param path: the absolute path of the file
+        """
+        if self.basepath:
+            if os.path.isdir(self.basepath):
+                return path.replace(self.basepath, '')
+            return os.path.basename(path)
+        return path
+
     def _get_title(self):
-        title = os.path.commonprefix(self.paths)
-        return title if title else self.paths[0]
+        """ Create a title for the archive if none given """
+        if self.basepath:
+            title = os.path.basename(os.path.normpath(self.basepath))
+        else:
+            title = 'upload-{}'.format(datetime.now().date().isoformat())
+        return title

@@ -123,10 +123,7 @@ class BigStashAPI(BigStashAPIBase):
 
         :param manifest: the manifest file path
         """
-        try:
-            files = {'file': open(manifest, 'rb')}
-        except IOError:
-            pass
+        files = {'file': ('manifest.json', manifest)}
         return self.post(self.UPLOAD_DETAIL.format(id=upload_id), files=files)
 
 
