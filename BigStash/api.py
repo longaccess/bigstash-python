@@ -117,15 +117,6 @@ class BigStashAPI(BigStashAPIBase):
         """
         return self.delete(self.TOKEN_DETAIL.format(id=token_id))
 
-    @json_response
-    def UploadManifest(self, upload_id, manifest):
-        """ Upload the manifest file for an Upload
-
-        :param manifest: the manifest file path
-        """
-        files = {'file': ('manifest.json', manifest)}
-        return self.post(self.UPLOAD_DETAIL.format(id=upload_id), files=files)
-
 
 if __name__ == "__main__":
     from BigStash.conf import BigStashAPISettings
