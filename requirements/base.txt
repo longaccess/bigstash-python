@@ -17,3 +17,5 @@ cffi==0.8.6
 pycparser==2.10
 # sha256: m9-s9UO68jUN92E-s39ZioAvNGmFyg3BVIvmSUFA_f8
 enum==0.4.4
+# sha256: tKGIu19D79uwsPwY-utcg9RqUfcdQgshJ8pKRxI_unM
+cached-property==1.0.0

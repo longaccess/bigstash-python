@@ -1,6 +1,8 @@
 from httpsig_cffi.requests_auth import HTTPSignatureAuth
 from BigStash.base import BigStashAPIBase
 from BigStash.decorators import json_response, no_content_response
+from .error import BigStashError
+from cached_property import cached_property
 
 
 class BigStashAPI(BigStashAPIBase):
@@ -39,6 +41,35 @@ class BigStashAPI(BigStashAPIBase):
                                  algorithm='hmac-sha256',
                                  headers=signature_headers)
         super(BigStashAPI, self).__init__(auth=auth, *args, **kwargs)
+
+    @cached_property
+    @json_response
+    def _root(self):
+        return self.get('')
+
+    def _top_resource_url(self, resource):
+        try:
+            return self._root[resource]
+        except Exception as e:
+            raise BigStashError(e)
+
+    def _add_pagination_param(self, params={}, page=None):
+        """
+        Add the proper query parameters for pagination
+        """
+        if page:
+            params.update({'page': page})
+        return params
+
+    @json_response
+    def GetNotifications(self, page=None):
+        """
+        Get a list of notifications
+
+        :param page: the page param for paginated results
+        """
+        return self.get(self._top_resource_url('notifications'),
+                        params=self._add_pagination_param(page))
 
     @json_response
     def GetArchives(self, page=None):
@@ -119,13 +150,16 @@ class BigStashAPI(BigStashAPIBase):
 
 
 if __name__ == "__main__":
+    import os
     from BigStash.conf import BigStashAPISettings
     s = BigStashAPISettings()
-    s['base_url'] = 'http://192.168.1.16:8000/api/v1'
-    api = BigStashAPI(
-        key='3e4bf6fb92733765166ba2ce5e79734f661aa112',
-        secret=('8e83b0aa82c694fd2a194024d1dd6957a411'
-                'cc754a6166b8997e992a68e78a4e485c2679'
-                'e36bf62b'),
-        settings=s)
-    print api.GetUser()
+    try:
+        api = BigStashAPI(
+            key=os.environ['BS_API_KEY'],
+            secret=os.environ['BS_API_SECRET'],
+            settings=s)
+    except KeyError:
+        print "Please define BS_API_KEY and BS_API_SECRET"
+        exit()
+    import IPython
+    IPython.embed(user_ns={'api': api})

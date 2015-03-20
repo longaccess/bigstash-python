@@ -5,6 +5,7 @@ from .conf import BigStashAPISettings
 from requests import Session
 from requests.sessions import merge_setting
 from requests.structures import CaseInsensitiveDict
+from six.moves.urllib.parse import urlparse
 
 
 DEFAULT_HEADERS = CaseInsensitiveDict({
@@ -57,12 +58,17 @@ class BigStashAPIBase(object):
 
         return s
 
-    def api_url(self, path=''):
+    def api_url(self, url=''):
         """
-        Return a full URL to the API resource at 'path'
-        API URLs always end in '/'.
+        Return a full URL to the API resource at 'url'
         """
-        return "/".join([self._base_url, path.rstrip('/'), ''])
+
+        url = url.rstrip('/')
+        if url:
+            url += '/'
+        if not urlparse(url).netloc:
+            return "/".join([self._base_url, url])
+        return url
 
     def add_date(self, headers):
         if 'date' not in [h.lower() for h in headers]:

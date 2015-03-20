@@ -16,9 +16,19 @@ class BigStashAuth(BigStashAPIBase):
 
 if __name__ == "__main__":
     from BigStash.conf import BigStashAPISettings
+    import sys
+    import logging
+    if len(sys.argv) < 2:
+        print "username required"
+        exit()
+    if len(sys.argv) > 2 and sys.argv[1] == '-d':
+        logging.basicConfig(level=logging.DEBUG)
+        u = sys.argv[2]
+    else:
+        u = sys.argv[1]
+
     s = BigStashAPISettings()
     from getpass import getpass
     p = getpass()
-    s['base_url'] = 'http://192.168.1.16:8000/api/v1'
     auth = BigStashAuth(settings=s)
-    print auth.GetAPIKey('koukopoulos@gmail.com', p)
+    print auth.GetAPIKey(u, p)
