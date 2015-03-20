@@ -8,8 +8,10 @@ six==1.9.0
 # sha256: 3dO4RIKKRbp92az3nWNC2z6gLzQIeLra1YBeDGSxDpM
 wrapt==1.10.2
 # sha256: -rf83eNg7GYURC0DIdzQ7_XkNUTLMNl16ddakUpM33g
+# sha256: TBJ37pnayDYVw0XX3BRvIaROTE3ttbNacAkB04npDWQ
 cryptography==0.7.2
 # sha256: JTLZ46-ePG0PcQ_JiwKVtWPH85z9l90iQr02-_SQBhA
+# sha256: -UhqWmMJb6uU5G4NyYrE7Z5Rx__NrysiqjtsHA6KPWM
 cffi==0.8.6
 # sha256: lX2YtmHAtktYCrb5SxJeCbZxQVTuUd5AvKFtPwB2uGw
 pycparser==2.10
