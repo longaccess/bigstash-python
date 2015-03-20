@@ -9,7 +9,7 @@ from requests.structures import CaseInsensitiveDict
 
 DEFAULT_HEADERS = CaseInsensitiveDict({
     'User-agent': 'BigStash Python SDK v{}'.format(__version__),
-    'Accept': 'application/vnd.deepfreeze+json',
+    'Accept': 'application/vnd.deepfreeze+json; version=2',
     'Content-Type': 'application/vnd.deepfreeze+json'
 })
 
