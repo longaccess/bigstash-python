@@ -1,5 +1,5 @@
 DEFAULT_SETTINGS = {
-    'base_url': 'https://www.bigstash.co/api/v2/',
+    'base_url': 'https://www.bigstash.co/api/v1/',
     'trust_env': False
 }
 
