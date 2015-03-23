@@ -5,7 +5,7 @@ DEFAULT_SETTINGS = {
 
 
 class BigStashAPISettings(object):
-    settings = {
+    _settings = {
         "default": DEFAULT_SETTINGS
     }
 
@@ -16,13 +16,13 @@ class BigStashAPISettings(object):
         """
         self.profile = profile
         if profile is not "default":
-            self.settings[profile] = {}
+            self._settings[profile] = {}
 
     def __getitem__(self, key):
-        return self.settings[self.profile].get(key)
+        return self._settings[self.profile].get(key)
 
     def __contains__(self, key):
-        return key in self.settings[self.profile]
+        return key in self._settings[self.profile]
 
     def __setitem__(self, key, value):
-        self.settings[self.profile][key] = value
+        self._settings[self.profile][key] = value
