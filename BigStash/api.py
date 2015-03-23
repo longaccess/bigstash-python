@@ -3,12 +3,17 @@ from BigStash.base import BigStashAPIBase
 from BigStash.decorators import json_response, no_content_response
 from BigStash.error import BigStashError
 from cached_property import cached_property
-from BigStash.models import Upload, ObjectList
+from BigStash import models
+import logging
+
+log = logging.getLogger('bigstash.api')
 
 
-class _api_object_list(ObjectList):
-    def __init__(self, api, *args, **kwargs):
+class _api_object_list(models.ObjectList):
+    def __init__(self, api=None, *args, **kwargs):
         super(_api_object_list, self).__init__(*args, **kwargs)
+        if api is None:
+            raise ValueError("api must not be None")
         self.api = api
 
     @json_response
@@ -69,8 +74,15 @@ class BigStashAPI(BigStashAPIBase):
     def _top_resource_url(self, resource):
         try:
             return self._root[resource]
-        except Exception as e:
-            raise BigStashError(e)
+        except Exception:
+            msg = "invalid resource '{}'".format(resource)
+            log.error(msg, exc_info=True)
+            raise BigStashError(msg)
+
+    def _get_top_list(self, model):
+        name = model.__name__.lower() + 's'
+        return _api_object_list(
+            api=self, klass=model, next=self._top_resource_url(name))
 
     def _add_pagination_param(self, params={}, page=None):
         """
@@ -94,20 +106,13 @@ class BigStashAPI(BigStashAPIBase):
         """
             Get all uploads. Returns an ObjectList.
         """
-        return _api_object_list(
-            self, Upload, next=self._top_resource_url(self.UPLOAD_LIST))
+        return self._get_top_list(models.Upload)
 
-    @json_response
-    def GetArchives(self, page=None):
+    def GetArchives(self):
         """
-        Get a list of archives
-
-        :param page: the page param for paginated results
+            Get a list of archives. Returns an ObjectList
         """
-        params = {}
-        if page:
-            params.update({'page': page})
-        return self.get(self.ARCHIVE_LIST, params=params)
+        return self._get_top_list(models.Archive)
 
     @json_response
     def GetUser(self):
