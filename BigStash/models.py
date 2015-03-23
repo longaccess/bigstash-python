@@ -22,8 +22,11 @@ class APIRoot(ModelBase):
 
 
 class URLObject(ModelBase):
+    _href_attr = 'href'
+
     def __unicode__(self):
-        return "{}: {}".format(self.__class__.__name__, self.url)
+        return "{}: {}".format(
+            self.__class__.__name__, getattr(self, self._href_attr, 'n/a'))
 
 
 class ObjectList(object):
