@@ -9,25 +9,6 @@ import logging
 log = logging.getLogger('bigstash.api')
 
 
-class _api_object_list(models.ObjectList):
-    def __init__(self, api=None, *args, **kwargs):
-        super(_api_object_list, self).__init__(*args, **kwargs)
-        if api is None:
-            raise ValueError("api must not be None")
-        self.api = api
-
-    @json_response
-    def _get_page(self, url):
-        return self.api.get(url)
-
-    def next_iter(self, url):
-        res = {'next': url}
-        while res['next'] is not None:
-            res = self._get_page(res['next'])
-            for r in res['results']:
-                yield r
-
-
 class BigStashAPI(BigStashAPIBase):
     USER_DETAIL = "user"
     UPLOAD_LIST = "uploads"
@@ -79,10 +60,17 @@ class BigStashAPI(BigStashAPIBase):
             log.error(msg, exc_info=True)
             raise BigStashError(msg)
 
+    @json_response
+    def _get_page(self, url):
+        return self.get(url)
+
     def _get_top_list(self, model):
         name = model.__name__.lower() + 's'
-        return _api_object_list(
-            api=self, klass=model, next=self._top_resource_url(name))
+        res = {'next': self._top_resource_url(name)}
+        while res['next'] is not None:
+            res = json_response(self._get_page)(res['next'])
+            for r in res['results']:
+                yield model(**r)
 
     def _add_pagination_param(self, params={}, page=None):
         """

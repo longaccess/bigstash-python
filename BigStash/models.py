@@ -1,5 +1,4 @@
 import six
-from itertools import chain
 
 
 class ModelBase(object):
@@ -35,22 +34,15 @@ class ObjectList(object):
         self.objects = objects
         self.next = next
 
-    def next_iter(self, url):
-        raise NotImplementedError(
-            "Must implement next_iter for partial lists")
-
-    def _lister(self):
-        if self.next is None:
-            return iter(self.objects)
-        return chain(self.objects, self.next_iter(self.next))
-
     def __iter__(self):
-        return (self.klass(**data) for data in self._lister())
+        return (self.klass(**data) for data in self.objects)
 
     def __repr__(self):
         s = []
         for obj in self:
             s.append("\t" + "\n\t".join(repr(obj).split("\n")))
+        if self.next is not None:
+            s.append("\t...")
         return ("{ " + super(ObjectList, self).__repr__() +
                 " [\n" + ",\n".join(s) + "]}")
 
