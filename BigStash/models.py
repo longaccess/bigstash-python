@@ -78,7 +78,7 @@ class User(URLObject):
         super(User, self).__init__(*args, **kwargs)
         if hasattr(self, 'archives') and self.archives is not None:
             self.archives = ObjectList(
-                Archive, self.archive['results'], self.archive['next'])
+                Archive, self.archives['results'], self.archives['next'])
 
 
 class Notification(ModelBase):
