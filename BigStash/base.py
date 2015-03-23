@@ -75,16 +75,16 @@ class BigStashAPIBase(object):
         """
         Return a full URL to the API resource at 'url'
         """
-        if not url:
-            return self._base_url.rstrip('/') + '/'
-        parsed = urlparse(url)
-        if parsed.path.rstrip('/'):
-            parsed._replace(path=parsed.path+'/')
-        if not parsed.netloc:
+        p = urlparse(url)
+        path = p.path.rstrip('/')
+        if path:
+            p = p._replace(path=path+"/")
+        if not p.netloc:
             base = urlparse(self._base_url)
-            parsed._replace(netloc="{}:{}".format(base.hostname, base.port))
-            parsed._replace(scheme=base.scheme)
-        return parsed.geturl()
+            p = p._replace(netloc="{}:{}".format(base.hostname, base.port))
+            p = p._replace(scheme=base.scheme)
+            p = p._replace(path="/".join([base.path, p.path]))
+        return p.geturl()
 
     def add_date(self, headers):
         if 'date' not in [h.lower() for h in headers]:
