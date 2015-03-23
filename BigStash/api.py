@@ -151,15 +151,23 @@ class BigStashAPI(BigStashAPIBase):
 
 if __name__ == "__main__":
     import os
-    from BigStash.conf import BigStashAPISettings
-    s = BigStashAPISettings()
-    try:
-        api = BigStashAPI(
-            key=os.environ['BS_API_KEY'],
-            secret=os.environ['BS_API_SECRET'],
-            settings=s)
-    except KeyError:
-        print "Please define BS_API_KEY and BS_API_SECRET"
-        exit()
+    from BigStash.conf import BigStashAPISettings, DEFAULT_SETTINGS
+    s = BigStashAPISettings('local')
+    s['base_url'] = os.environ.get(
+        'BS_API_URL', DEFAULT_SETTINGS['base_url'])
+
+    def get_api(s=None):
+        try:
+            return BigStashAPI(
+                key=os.environ['BS_API_KEY'],
+                secret=os.environ['BS_API_SECRET'],
+                settings=s)
+        except KeyError:
+            print "Please define the following env vars:"
+            print "BS_API_KEY"
+            print "BS_API_SECRET"
     import IPython
-    IPython.embed(user_ns={'api': api})
+    IPython.embed(user_ns={
+        'get_api': get_api,
+        'api_settings': s
+    })
