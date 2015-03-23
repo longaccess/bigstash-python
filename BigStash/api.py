@@ -111,10 +111,12 @@ class BigStashAPI(BigStashAPIBase):
         return self._get_top_list(models.Archive)
 
     @json_response
+    def _get_user(self):
+        return self.get(self.USER_DETAIL)
+
     def GetUser(self):
         """Get the user resource"""
-
-        return self.get(self.USER_DETAIL)
+        return models.User(**self._get_user())
 
     @json_response
     def GetArchive(self, archive_id):
