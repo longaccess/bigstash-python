@@ -7,11 +7,24 @@ from requests.sessions import merge_setting
 from requests.structures import CaseInsensitiveDict
 from six.moves.urllib.parse import urlparse
 
+DEFAULT_MEDIA_PARAMS = {
+    'version': '2'
+}
+
+DEFAULT_MEDIA_TYPE = 'application/vnd.deepfreeze'
+
+DEFAULT_MEDIA_SUBTYPE = 'json'
+
+
+def _media_type(subtype=DEFAULT_MEDIA_SUBTYPE, params=DEFAULT_MEDIA_PARAMS):
+    return "; ".join(["{}+{}".format(DEFAULT_MEDIA_TYPE, subtype)] +
+                     ["=".join(p) for p in params.items()])
+
 
 DEFAULT_HEADERS = CaseInsensitiveDict({
     'User-agent': 'BigStash Python SDK v{}'.format(__version__),
-    'Accept': 'application/vnd.deepfreeze+json; version=2',
-    'Content-Type': 'application/vnd.deepfreeze+json'
+    'Accept': _media_type(),
+    'Content-Type': _media_type()
 })
 
 
