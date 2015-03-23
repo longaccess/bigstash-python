@@ -47,6 +47,13 @@ class ObjectList(object):
     def __iter__(self):
         return (self.klass(**data) for data in self._lister())
 
+    def __repr__(self):
+        s = []
+        for obj in self:
+            s.append("\t" + "\n\t".join(repr(obj).split("\n")))
+        return ("{ " + super(ObjectList, self).__repr__() +
+                " [\n" + ",\n".join(s) + "]}")
+
 
 class Archive(URLObject):
     pass
