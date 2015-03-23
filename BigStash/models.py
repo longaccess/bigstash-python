@@ -4,8 +4,17 @@ from itertools import chain
 
 class ModelBase(object):
     def __init__(self, *args, **kwargs):
+        self._slots = []
         for (key, value) in six.iteritems(kwargs):
+            self._slots.append(key)
             setattr(self, key, value)
+
+    def __repr__(self):
+        s = ["{ " + super(ModelBase, self).__repr__()]
+        for slot in self._slots:
+            r = "\n\t".join(repr(getattr(self, slot)).split("\n"))
+            s.append("\t{} = {}".format(slot, r))
+        return "\n".join(s) + "}"
 
 
 class APIRoot(ModelBase):
