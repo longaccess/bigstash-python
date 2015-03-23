@@ -15,8 +15,9 @@ class BigStashAuth(BigStashAPIBase):
 
 
 if __name__ == "__main__":
-    from BigStash.conf import BigStashAPISettings
+    from BigStash.conf import BigStashAPISettings, DEFAULT_SETTINGS
     import sys
+    import os
     import logging
     if len(sys.argv) < 2:
         print "username required"
@@ -27,8 +28,10 @@ if __name__ == "__main__":
     else:
         u = sys.argv[1]
 
-    s = BigStashAPISettings()
+    local_settings = BigStashAPISettings('local')
+    local_settings['base_url'] = os.environ.get(
+        'BS_API_URL', DEFAULT_SETTINGS['base_url'])
     from getpass import getpass
     p = getpass()
-    auth = BigStashAuth(settings=s)
+    auth = BigStashAuth(settings=local_settings)
     print auth.GetAPIKey(u, p)
