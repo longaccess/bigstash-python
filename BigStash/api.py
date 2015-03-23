@@ -1,8 +1,26 @@
 from httpsig_cffi.requests_auth import HTTPSignatureAuth
 from BigStash.base import BigStashAPIBase
 from BigStash.decorators import json_response, no_content_response
-from .error import BigStashError
+from BigStash.error import BigStashError
 from cached_property import cached_property
+from BigStash.models import Upload, ObjectList
+
+
+class _api_object_list(ObjectList):
+    def __init__(self, api, *args, **kwargs):
+        super(_api_object_list, self).__init__(*args, **kwargs)
+        self.api = api
+
+    @json_response
+    def _get_page(self, url):
+        return self.api.get(url)
+
+    def next_iter(self, url):
+        res = {'next': url}
+        while res['next'] is not None:
+            res = self._get_page(res['next'])
+            for r in res['results']:
+                yield r
 
 
 class BigStashAPI(BigStashAPIBase):
@@ -72,15 +90,12 @@ class BigStashAPI(BigStashAPIBase):
         return self.get(self._top_resource_url(self.NOTIFICATION_LIST),
                         params=self._add_pagination_param(page))
 
-    @json_response
-    def GetUploads(self, page=None):
+    def GetUploads(self):
         """
-        Get a list of uploads
-
-        :param page: the page param for paginated results
+            Get all uploads. Returns an ObjectList.
         """
-        return self.get(self._top_resource_url(self.UPLOAD_LIST),
-                        params=self._add_pagination_param(page))
+        return _api_object_list(
+            self, Upload, next=self._top_resource_url(self.UPLOAD_LIST))
 
     @json_response
     def GetArchives(self, page=None):
