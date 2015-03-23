@@ -92,15 +92,11 @@ class BigStashAPI(BigStashAPIBase):
             params.update({'page': page})
         return params
 
-    @json_response
-    def GetNotifications(self, page=None):
+    def GetNotifications(self):
         """
-        Get a list of notifications
-
-        :param page: the page param for paginated results
+            Get all notifications
         """
-        return self.get(self._top_resource_url(self.NOTIFICATION_LIST),
-                        params=self._add_pagination_param(page))
+        return self._get_top_list(models.Notification)
 
     def GetUploads(self):
         """

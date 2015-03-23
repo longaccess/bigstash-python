@@ -69,3 +69,7 @@ class User(URLObject):
         if hasattr(self, 'archives') and self.archives is not None:
             self.archives = ObjectList(
                 Archive, self.archive['results'], self.archive['next'])
+
+
+class Notification(ModelBase):
+    pass
