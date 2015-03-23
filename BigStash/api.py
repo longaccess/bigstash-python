@@ -188,6 +188,7 @@ if __name__ == "__main__":
     local_settings = BigStashAPISettings('local')
     local_settings['base_url'] = os.environ.get(
         'BS_API_URL', DEFAULT_SETTINGS['base_url'])
+    logging.basicConfig()
 
     def get_api(s=None):
         try:
@@ -205,7 +206,12 @@ if __name__ == "__main__":
         args = sys.argv[2:]
         if not hasattr(api, method):
             print "No such method {}".format(method)
-        r = getattr(api, method)(*args)
+        try:
+            r = getattr(api, method)(*args)
+        except BigStashError as e:
+            print "There was an error: {}".format(e)
+            sys.exit(1)
+
         if not isinstance(r, ObjectList):
             r = [r]
         for obj in r:
