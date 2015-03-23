@@ -1,4 +1,4 @@
-from testtools import TestCase
+from testtools.testcase import TestCase
 from BigStash import BigStashAPISettings
 
 
