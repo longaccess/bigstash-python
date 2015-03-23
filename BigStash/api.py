@@ -13,6 +13,7 @@ class BigStashAPI(BigStashAPIBase):
     ARCHIVE_DETAIL = "archives/{id}"
     ARCHIVE_UPLOAD = "archives/{id}/upload"
     TOKEN_DETAIL = "tokens/{id}"
+    NOTIFICATION_LIST = "notifications"
 
     def __init__(self, key=None, secret=None, *args, **kwargs):
         """Initialize a :class:`BigStashAPI <BigStashAPI>` object.
@@ -68,7 +69,17 @@ class BigStashAPI(BigStashAPIBase):
 
         :param page: the page param for paginated results
         """
-        return self.get(self._top_resource_url('notifications'),
+        return self.get(self._top_resource_url(self.NOTIFICATION_LIST),
+                        params=self._add_pagination_param(page))
+
+    @json_response
+    def GetUploads(self, page=None):
+        """
+        Get a list of uploads
+
+        :param page: the page param for paginated results
+        """
+        return self.get(self._top_resource_url(self.UPLOAD_LIST),
                         params=self._add_pagination_param(page))
 
     @json_response
