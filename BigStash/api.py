@@ -1,3 +1,4 @@
+from __future__ import print_function
 from httpsig_cffi.requests_auth import HTTPSignatureAuth
 from BigStash.base import BigStashAPIBase
 from BigStash.decorators import json_response, no_content_response
@@ -186,25 +187,25 @@ if __name__ == "__main__":
                 secret=os.environ['BS_API_SECRET'],
                 settings=s or local_settings)
         except KeyError:
-            print "Please define the following env vars:"
-            print "BS_API_KEY"
-            print "BS_API_SECRET"
+            print("Please define the following env vars:")
+            print("BS_API_KEY")
+            print("BS_API_SECRET")
     if len(sys.argv) > 1:
         api = get_api()
         method = sys.argv[1]
         args = sys.argv[2:]
         if not hasattr(api, method):
-            print "No such method {}".format(method)
+            print("No such method {}".format(method))
         try:
             r = getattr(api, method)(*args)
         except BigStashError as e:
-            print "There was an error: {}".format(e)
+            print("There was an error: {}".format(e))
             sys.exit(1)
 
         if not isinstance(r, ObjectList):
             r = [r]
         for obj in r:
-            print obj
+            print(obj)
     else:
         import IPython
         IPython.embed(user_ns={

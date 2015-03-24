@@ -1,3 +1,4 @@
+from __future__ import print_function
 import os
 import hashlib
 import re
@@ -150,9 +151,9 @@ if __name__ == "__main__":
                 secret=os.environ['BS_API_SECRET'],
                 settings=s or local_settings)
         except KeyError:
-            print "Please define the following env vars:"
-            print "BS_API_KEY"
-            print "BS_API_SECRET"
+            print("Please define the following env vars:")
+            print("BS_API_KEY")
+            print("BS_API_SECRET")
     api = get_api()
 
-    print Upload(paths=sys.argv[1:], api=get_api()).archive('foo')
+    print(Upload(paths=sys.argv[1:], api=get_api()).archive('foo'))

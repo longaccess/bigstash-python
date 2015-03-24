@@ -15,7 +15,7 @@ cryptography==0.7.2
 cffi==0.8.6
 # sha256: lX2YtmHAtktYCrb5SxJeCbZxQVTuUd5AvKFtPwB2uGw
 pycparser==2.10
-# sha256: m9-s9UO68jUN92E-s39ZioAvNGmFyg3BVIvmSUFA_f8
-enum==0.4.4
+# sha256: 08GfJqajRinBjHdfWd_F3VlXZMcitXotpW6_tpuU5Ec
+enum34==1.0.4
 # sha256: tKGIu19D79uwsPwY-utcg9RqUfcdQgshJ8pKRxI_unM
 cached-property==1.0.0

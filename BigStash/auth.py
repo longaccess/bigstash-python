@@ -1,3 +1,4 @@
+from __future__ import print_function
 from BigStash import __version__
 
 from BigStash.base import BigStashAPIBase
@@ -20,7 +21,7 @@ if __name__ == "__main__":
     import os
     import logging
     if len(sys.argv) < 2:
-        print "username required"
+        print("username required")
         exit()
     if len(sys.argv) > 2 and sys.argv[1] == '-d':
         logging.basicConfig(level=logging.DEBUG)
@@ -34,4 +35,4 @@ if __name__ == "__main__":
     from getpass import getpass
     p = getpass()
     auth = BigStashAuth(settings=local_settings)
-    print auth.GetAPIKey(u, p)
+    print(auth.GetAPIKey(u, p))
