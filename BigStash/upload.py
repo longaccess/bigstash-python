@@ -11,7 +11,7 @@ class Upload(object):
     MANIFEST_FILE = 'manifest.json'
     INVALID_CHAR_RE = re.compile(r"[\\\/<>\|\?\"\*:]+")
     MORE_INVALID_CHARS_RE = re.compile(
-        r'[^\u0009\u000a\u000d\u0020-\uD7FF\uE000-\uFFFD]')
+        ur'[^\u0009\u000a\u000d\u0020-\uD7FF\uE000-\uFFFD]')
     TEMP_FILE_RE = re.compile(r'^~\$|\.~|~.*\.tmp')
     TRAILING_CHAR_RE = re.compile(r'\.+|\s+$')
     INVALID_FILES = ['desktop.ini', 'thumbs.db', '.ds_store', 'icon\\r',
