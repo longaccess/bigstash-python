@@ -136,3 +136,27 @@ class Upload(object):
         else:
             title = 'upload-{}'.format(datetime.now().date().isoformat())
         return title
+
+
+if __name__ == "__main__":
+    import sys
+    from BigStash.conf import BigStashAPISettings, DEFAULT_SETTINGS
+    from BigStash.api import BigStashAPI
+    local_settings = BigStashAPISettings('local')
+    local_settings['base_url'] = os.environ.get(
+        'BS_API_URL', DEFAULT_SETTINGS['base_url'])
+    logging.basicConfig(level=logging.DEBUG)
+
+    def get_api(s=None):
+        try:
+            return BigStashAPI(
+                key=os.environ['BS_API_KEY'],
+                secret=os.environ['BS_API_SECRET'],
+                settings=s or local_settings)
+        except KeyError:
+            print "Please define the following env vars:"
+            print "BS_API_KEY"
+            print "BS_API_SECRET"
+    api = get_api()
+
+    print Upload(paths=sys.argv[1:], api=get_api()).archive('foo')
