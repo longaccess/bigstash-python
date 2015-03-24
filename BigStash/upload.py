@@ -93,13 +93,13 @@ class Upload(object):
         :param path: the absolute path of the file
         """
         filename = os.path.basename(path)
-        if self.INVALID_CHAR_RE.match(filename):
+        if self.INVALID_CHAR_RE.search(filename):
             self.invalid_paths.append(
                 {'path': path, 'msg': self.INVALID_CHAR_MSG})
         elif self.TRAILING_CHAR_RE.match(filename):
             self.invalid_paths.append(
                 {'path': path, 'msg': self.TRAILING_CHARS_MSG})
-        elif self.MORE_INVALID_CHARS_RE.match(filename):
+        elif self.MORE_INVALID_CHARS_RE.search(filename):
             self.invalid_paths.append(
                 {'path': path, 'msg': self.INVALID_CHAR_MSG})
         elif os.path.islink(path):
