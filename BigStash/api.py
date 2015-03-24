@@ -122,22 +122,25 @@ class BigStashAPI(BigStashAPIBase):
         """
         return self.get(self.UPLOAD_DETAIL.format(id=upload_id))
 
-    @json_response
-    def CreateArchive(self, **kwargs):
-        """ Create a new archive
+    def CreateArchive(self, title=None, size=None, **kwargs):
+        """ Create a new archive. Returns an Archive instance.
 
         :param title: the archive title
         :param size: the archive size in bytes
         """
-        return self.post(self.ARCHIVE_LIST, json=kwargs)
+        ret = json_response(self.post)(
+            self._top_resource_url('archives'),
+            json={'title': title, 'size': size}, **kwargs)
+        return models.Archive(**ret)
 
-    @json_response
-    def CreateUpload(self, archive_id):
+    def CreateUpload(self, archive=None, manifest=None, **kwargs):
         """ Create a new upload for an archive
 
-        :param archive_id: the archive id
+        :param archive: the archive model instance
+        :param manifest: the upload manifest
         """
-        return self.post(self.ARCHIVE_UPLOAD.format(id=archive_id))
+        ret = json_response(self.post)(archive.upload, json=manifest, **kwargs)
+        return models.Upload(**ret)
 
     @json_response
     def UpdateUploadStatus(self, upload_id, status):
