@@ -4,7 +4,6 @@ import re
 import logging
 from datetime import datetime
 from BigStash import BigStashError
-from BigStash.models import Archive, User
 
 
 class Upload(object):
@@ -36,21 +35,18 @@ class Upload(object):
 
     def archive(self, title=''):
         title = title if title else self._get_title()
-        files_meta = self._get_files_meta(self.paths)
+        files_meta = self._get_files_meta()
         if self.invalid_paths:
             logging.info('There were invalid files in your selection')
             return
         try:
-            user_data = self.api.GetUser()
-            ar_data = self.api.CreateArchive(title=title, size=self.total_size)
-            user = User(user_data)
-            archive = Archive(ar_data)
+            archive = self.api.CreateArchive(title=title, size=self.total_size)
             manifest = {
-                'archiveid': archive.id,
-                'userid': user.id,
-                'files': files_meta
+                'title': archive.title,
+                'size': archive.size,
+                'file_count': len(files_meta)
             }
-            self.CreateUpload(archive.id, manifest=manifest)
+            self.api.CreateUpload(archive=archive, manifest=manifest)
         except BigStashError:
             logging.error("Couldn't create upload")
 
