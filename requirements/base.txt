@@ -1,4 +1,3 @@
--i https://pypi.longaccess.io/root/longaccess/+simple/
 # sha256: HwRtz17HEu076GhLnzPJW3bijNHIJdsPXhVXv9h7N0U
 requests==2.5.1
 # sha256: Ys_uA7ikOq77K1tNpyUU1YHztSeiShMWFSwIBS7sl5U
