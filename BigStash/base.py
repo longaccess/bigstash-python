@@ -81,7 +81,7 @@ class BigStashAPIBase(object):
             p = p._replace(path=path+"/")
         if not p.netloc:
             base = urlparse(self._base_url)
-            p = p._replace(netloc="{}:{}".format(base.hostname, base.port))
+            p = p._replace(netloc=base.netloc)
             p = p._replace(scheme=base.scheme)
             p = p._replace(path="/".join([base.path, p.path]))
         return p.geturl()
