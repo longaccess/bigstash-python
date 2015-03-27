@@ -75,3 +75,7 @@ class User(URLObject):
 
 class Notification(ModelBase):
     pass
+
+
+class File(ModelBase):
+    pass

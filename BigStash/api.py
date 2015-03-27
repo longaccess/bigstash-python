@@ -5,6 +5,7 @@ from BigStash.decorators import json_response, no_content_response
 from BigStash.error import BigStashError
 from cached_property import cached_property
 from BigStash import models
+from BigStash.serialize import model_to_json
 import logging
 
 log = logging.getLogger('bigstash.api')
@@ -140,7 +141,8 @@ class BigStashAPI(BigStashAPIBase):
         :param archive: the archive model instance
         :param manifest: the upload manifest
         """
-        ret = json_response(self.post)(archive.upload, json=manifest, **kwargs)
+        ret = json_response(self.post)(
+            archive.upload, data=model_to_json(manifest), **kwargs)
         return models.Upload(**ret)
 
     @json_response
