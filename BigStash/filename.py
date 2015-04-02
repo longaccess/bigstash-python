@@ -6,6 +6,8 @@ import os.path
 from functools import partial
 from operator import contains
 
+# from: https://github.com/longaccess/deepfreeze.io/blob/dev/docs/api.md
+
 # Dissalowed XML character ranges. See http://www.w3.org/TR/REC-xml/#NT-Char
 
 _xml_invalid_ranges = [
