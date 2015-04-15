@@ -55,11 +55,12 @@ class BigStashAPI(BigStashAPIBase):
         return self.get('')
 
     def _top_resource_url(self, resource):
+        msg = "invalid resource '{}'".format(resource)
         try:
             return self._root[resource]
+        except BigStashError:
+            raise
         except Exception:
-            msg = "invalid resource '{}'".format(resource)
-            log.error(msg, exc_info=True)
             raise BigStashError(msg)
 
     @json_response

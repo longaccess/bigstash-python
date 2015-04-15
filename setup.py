@@ -65,5 +65,8 @@ setup(version=pep386adapt(versioneer.get_version()),
       install_requires=install_requires,
       extras_require={
           'dev': dev_requires,
+          },
+      entry_points={
+          'console_scripts': ['bsput=BigStash.uploader:main']
           }
       )

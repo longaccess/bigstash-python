@@ -1,6 +1,7 @@
 from requests.exceptions import RequestException
-from .error import BigStashError
+from .error import BigStashError, BigStashForbiddenError
 from wrapt import decorator
+from collections import Mapping
 import logging
 
 
@@ -9,22 +10,27 @@ log = logging.getLogger('bigstash.api')
 
 @decorator
 def json_response(wrapped, instance, args, kwargs):
+    exc = None
     try:
         r = wrapped(*args, **kwargs)
+        ctype = r.headers.get('content-type', 'application/json')
         r.raise_for_status()
         json = r.json()
-        ctype = r.headers.get('content-type', None)
-        if ctype is None:
-            log.warning("No content-type header found. Assuming JSON.")
-        elif 'json' not in r.headers.get('content-type'):
-            raise BigStashError("Unexpected content type: {}".format(ctype))
-        else:
-            json['_type'] = ctype
+        json['_type'] = ctype
         return json
     except RequestException as e:
-        raise BigStashError(e)
+        text = e.response.reason
+        body = e.response.json() if 'json' in ctype else r.response.text
+        if isinstance(body, Mapping) and 'detail' in body:
+            text = body['detail']
+        if e.response.status_code in (401, 403):
+            exc = BigStashForbiddenError(
+                text, request=e.request, response=e.response)
+        else:
+            exc = BigStashError(e)
     except ValueError as e:
-        raise BigStashError(e)
+        exc = BigStashError(e)
+    raise exc
 
 
 @decorator

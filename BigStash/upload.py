@@ -3,7 +3,7 @@ import os
 import hashlib
 import logging
 from functools import partial
-from BigStash import BigStashError, filename, models
+from BigStash import filename, models
 from BigStash.manifest import Manifest
 from six.moves import filter, map
 from itertools import starmap, chain
@@ -58,12 +58,9 @@ class Upload(object):
 
         manifest = Manifest(title=title, files=files)
 
-        if errors:
-            log.error('There were invalid files in your selection')
-            return
-        try:
+        upload = None
+        if not errors:
             archive = self.api.CreateArchive(
                 title=manifest.title, size=manifest.size)
-            self.api.CreateUpload(archive=archive, manifest=manifest)
-        except BigStashError:
-            log.error("Couldn't create upload")
+            upload = self.api.CreateUpload(archive=archive, manifest=manifest)
+        return (upload, errors)
