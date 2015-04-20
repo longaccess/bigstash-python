@@ -18,3 +18,5 @@ pycparser==2.10
 enum34==1.0.4
 # sha256: tKGIu19D79uwsPwY-utcg9RqUfcdQgshJ8pKRxI_unM
 cached-property==1.0.0
+# sha256: CMA5Vgptov5PLEJtB2bihNO3NuNV-N0ks3NnsLtBlzs
+retrying==1.3.3

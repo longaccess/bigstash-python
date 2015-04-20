@@ -21,7 +21,8 @@ install_requires = [
     'boto>=2.14, <3',
     'httpsig_cffi>=15.0.0, <16.0.0',
     'six>=1.9, <2.0',
-    'requests>=2.5.1, <2.6'
+    'requests>=2.5.1, <2.6',
+    'retrying'
 ]
 
 
@@ -67,6 +68,6 @@ setup(version=pep386adapt(versioneer.get_version()),
           'dev': dev_requires,
           },
       entry_points={
-          'console_scripts': ['bsput=BigStash.uploader:main']
+          'console_scripts': ['bsput=BigStash.upload:main']
           }
       )

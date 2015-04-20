@@ -1,66 +1,117 @@
-from __future__ import unicode_literals, print_function
+import boto3
 import os
-import hashlib
+import sys
 import logging
-from functools import partial
-from BigStash import filename, models
+import posixpath
+import threading
+from getpass import getpass
+from BigStash.conf import BigStashAPISettings, DEFAULT_SETTINGS
+from BigStash import BigStashAPI, BigStashError, BigStashAuth
 from BigStash.manifest import Manifest
-from six.moves import filter, map
-from itertools import starmap, chain
+from boto3.s3.transfer import S3Transfer, TransferConfig
+from retrying import retry
 
 
-log = logging.getLogger('bigstash.upload')
+log = logging.getLogger('bigstash.uploader')
 
 
-class Upload(object):
+class ProgressPercentage(object):
+    def __init__(self, filename):
+        self._filename = filename
+        self._size = float(os.path.getsize(filename))
+        self._seen_so_far = 0
+        self._lock = threading.Lock()
 
-    def __init__(self, api=None):
-        if not api:
-            raise TypeError("You must provide a BigStash API instance")
-        self.api = api
+    def __call__(self, bytes_amount):
+        # To simplify we'll assume this is hooked up
+        # to a single filename.
+        with self._lock:
+            # because: https://github.com/boto/boto3/issues/98
+            if bytes_amount > 0 and self._seen_so_far == self._size:
+                # assume we are now only starting the actual transfer
+                self._seen_so_far = 0
+            self._seen_so_far += bytes_amount
+            percentage = (self._seen_so_far / self._size) * 100
+            sys.stdout.write("\r%s %s / %s (%.2f%%)" % (
+                self._filename, self._seen_so_far, self._size, percentage))
+            sys.stdout.flush()
 
-    def archive(self, paths=[], title=''):
-        if not paths:
-            raise TypeError("You must provide at least a file path")
 
-        errors = []
+def get_api(settings=None):
+    if settings is None:
+        settings = BigStashAPISettings('local')
+        settings['base_url'] = os.environ.get(
+            'BS_API_URL', DEFAULT_SETTINGS['base_url'])
+    k = s = None
+    if all(e in os.environ for e in ('BS_API_KEY', 'BS_API_SECRET')):
+        k, s = (os.environ['BS_API_KEY'], os.environ['BS_API_SECRET'])
+    else:
+        auth = BigStashAuth(settings=settings)
+        k, s = auth.GetAPIKey(input("Username: "), getpass("Password: "))
+    return BigStashAPI(key=k, secret=s, settings=settings)
 
-        def ignored(path, reason, *args):
-            log.debug("Ignoring {}: {}".format(path, reason))
 
-        def invalid(path, reason, *args):
-            errors.append(path)
-            log.debug("Invalid file {}: {}".format(path, reason))
-
-        def _include_file(path):
-            p = os.path.basename(path)
-            return not any(chain(
-                starmap(partial(ignored, path), filename.should_ignore(p)),
-                starmap(partial(invalid, path), filename.is_invalid(p))))
-
-        def _walk_dirs(paths):
-            for path in paths:
-                if os.path.isdir(path):
-                    for r, _, files in os.walk(path):
-                        for p in filter(_include_file, files):
-                            yield os.path.join(r, p)
-                elif _include_file(path):
-                    yield path
-
-        def _mkfile(path):
-            return models.File(
-                path=path,
-                size=os.path.getsize(path),
-                last_modified=os.path.getmtime(path),
-                md5=hashlib.md5(open(path, 'rb').read()).hexdigest())
-
-        files = (_mkfile(p) for p in map(os.path.abspath, _walk_dirs(paths)))
-
-        manifest = Manifest(title=title, files=files)
-
+def main():
+    level = getattr(logging, os.environ.get("BS_LOG_LEVEL", "error").upper())
+    logging.basicConfig(level=level)
+    if len(sys.argv) == 1:
+        print("Usage: {} [file1, file2, ...]".format(sys.argv[0]))
+        sys.exit(3)
+    try:
         upload = None
-        if not errors:
-            archive = self.api.CreateArchive(
-                title=manifest.title, size=manifest.size)
-            upload = self.api.CreateUpload(archive=archive, manifest=manifest)
-        return (upload, errors)
+        manifest, errors = Manifest.from_paths(sys.argv[1:])
+        if errors:
+            errtext = [": ".join(e) for e in errors]
+            print("\n".join(["There were errors:"] + errtext))
+            sys.exit(4)
+        bigstash = get_api()
+        upload = bigstash.CreateUpload(manifest=manifest)
+        print("Uploading {}..".format(upload.archive.key))
+        s3 = boto3.resource(
+            's3', region_name=upload.s3.region,
+            aws_access_key_id=upload.s3.token_access_key,
+            aws_secret_access_key=upload.s3.token_secret_key,
+            aws_session_token=upload.s3.token_session, use_ssl=False)
+        config = TransferConfig(
+            multipart_threshold=8 * 1024 * 1024,
+            max_concurrency=10,
+            num_download_attempts=10)
+        transfer = S3Transfer(s3.meta.client, config)
+        for f in manifest:
+            transfer.upload_file(
+                f.original_path, upload.s3.bucket,
+                posixpath.join(upload.s3.prefix, f.path),
+                callback=ProgressPercentage(f.original_path))
+            print("..OK")
+        bigstash.UpdateUploadStatus(upload, 'uploaded')
+        print("Waiting for {}..".format(upload.url), end="", flush=True)
+        retry_args = {
+            'wait': 'exponential_sleep',
+            'wait_exponential_multiplier': 1000,
+            'wait_exponential_max': 10000,
+            'retry_on_exception': lambda e: not isinstance(e, BigStashError),
+            'retry_on_result': lambda r: r.status not in ('completed', 'error')
+        }
+
+        @retry(**retry_args)
+        def refresh(u):
+            print(".", end="", flush=True)
+            return bigstash.RefreshUploadStatus(u)
+
+        print("upload status: {}".format(refresh(upload).status))
+    except OSError as e:
+        err = "error"
+        if e.filename is not None:
+            err = e.filename
+        print("{}: {}".format(err, e.strerror))
+        sys.exit(3)
+    except BigStashError as e:
+        print(e)
+        sys.exit(2)
+    except Exception as e:
+        log.error("error", exc_info=True)
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()
