@@ -20,12 +20,15 @@ def json_response(wrapped, instance, args, kwargs):
         return json
     except RequestException as e:
         text = e.response.reason
-        body = e.response.json() if 'json' in ctype else r.response.text
+        body = e.response.json() if 'json' in ctype else e.response.text
+        log.debug("error on {}".format(r.request.url), exc_info=True)
         if isinstance(body, Mapping) and 'detail' in body:
             text = body['detail']
         if e.response.status_code in (401, 403):
             exc = BigStashForbiddenError(
                 text, request=e.request, response=e.response)
+        elif e.response.status_code in (400, 500):
+            exc = BigStashError(text)
         else:
             exc = BigStashError(e)
     except ValueError as e:
