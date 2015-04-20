@@ -5,6 +5,7 @@ from BigStash.decorators import json_response, no_content_response
 from BigStash.error import BigStashError
 from cached_property import cached_property
 from BigStash import models
+from collections import Mapping
 from BigStash.serialize import model_to_json
 import logging
 
@@ -136,25 +137,49 @@ class BigStashAPI(BigStashAPIBase):
             json={'title': title, 'size': size}, **kwargs)
         return models.Archive(**ret)
 
+    def RefreshUploadStatus(self, upload):
+        status = upload.status
+        ret = json_response(self.get)(upload.url)
+        if ret['status'] == status:
+            return upload
+        new_archive = ret.get('archive', None)
+        if new_archive and not isinstance(new_archive, Mapping):
+            new_archive = json_response(self.get)(new_archive)
+        ret['archive'] = models.Archive(**new_archive)
+        return upload.__class__(**ret)
+
     def CreateUpload(self, archive=None, manifest=None, **kwargs):
         """ Create a new upload for an archive
 
         :param archive: the archive model instance
         :param manifest: the upload manifest
         """
+        if archive is not None:
+            url = archive.upload
+        else:
+            url = self._top_resource_url('uploads')
         ret = json_response(self.post)(
-            archive.upload, data=model_to_json(manifest), **kwargs)
+            url, data=model_to_json(manifest), **kwargs)
+        if archive is None:
+            new_archive = ret.get('archive', None)
+            if new_archive and not isinstance(new_archive, Mapping):
+                new_archive = json_response(self.get)(new_archive)
+            archive = models.Archive(**new_archive)
+        ret['archive'] = archive
         return models.Upload(**ret)
 
     @json_response
-    def UpdateUploadStatus(self, upload_id, status):
+    def UpdateUploadFiles(self, upload, files=None):
+        pass
+
+    @json_response
+    def UpdateUploadStatus(self, upload, status):
         """ Update an upload's status
 
         :param upload_id: the upload id
         :param status: the new upload status
         """
-        return self.patch(self.UPLOAD_DETAIL.format(id=upload_id),
-                          json={"status": status})
+        return self.patch(upload.url, json={"status": status})
 
     @no_content_response
     def CancelUpload(self, upload_id):

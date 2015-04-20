@@ -3,6 +3,7 @@ import six
 import re
 import sys
 import os.path
+import posixpath
 from functools import partial
 from operator import contains
 
@@ -56,9 +57,30 @@ IGNORE_TESTS = {
     'is link': os.path.islink
 }
 
-INVALID_TESTS = {
-    "file doesn't exist": lambda p: not os.path.exists(p)
-}
+
+def splitpath(path):
+    _, path = os.path.splitdrive(path)
+    folders = []
+    path, file = os.path.split(path)
+    if file:
+        folders.append(file)
+    while True:
+        path, folder = os.path.split(path)
+        if folder != "":
+            folders.append(folder)
+        else:
+            if path != "":
+                folders.append(path)
+            break
+    folders.reverse()
+    return folders
+
+
+def toposix(path):
+    components = splitpath(path)
+    if components[0] == os.sep:
+        components[0] = posixpath.sep
+    return posixpath.join(*components)
 
 
 def get_validator(tests={}, search={}, match={}):
@@ -66,8 +88,9 @@ def get_validator(tests={}, search={}, match={}):
     validators += [(m, re.compile(p).match) for m, p in six.iteritems(match)]
     validators += [(m, f) for m, f in six.iteritems(tests)]
 
-    return lambda p: ((m, f) for m, f in validators if f(p))
+    return lambda path: ((m, f, p) for p in splitpath(path)
+                         for m, f in validators if p != os.sep and f(p))
 
 should_ignore = get_validator(tests=IGNORE_TESTS)
 is_invalid = get_validator(
-    tests=INVALID_TESTS, search=SEARCH_PATTERNS, match=MATCH_PATTERNS)
+    search=SEARCH_PATTERNS, match=MATCH_PATTERNS)

@@ -1,19 +1,48 @@
+import os.path
 import six
+from BigStash import filename
+from collections import Mapping
+
+from datetime import datetime, timedelta, tzinfo
+
+
+try:
+    from datetime.timezone import utc
+except ImportError as e:
+    ZERO = timedelta(0)
+
+    class UTC(tzinfo):
+        """UTC"""
+
+        def utcoffset(self, dt):
+            return ZERO
+
+        def tzname(self, dt):
+            return "UTC"
+
+        def dst(self, dt):
+            return ZERO
+
+    utc = UTC()
 
 
 class ModelBase(object):
     def __init__(self, *args, **kwargs):
         self._slots = []
-        for (key, value) in six.iteritems(kwargs):
+        for key, value in six.iteritems(kwargs):
             self._slots.append(key)
             setattr(self, key, value)
 
     def __repr__(self):
         s = ["{ " + super(ModelBase, self).__repr__()]
-        for slot in self._slots:
-            r = "\n\t".join(repr(getattr(self, slot)).split("\n"))
+        for slot, value in self.items():
+            r = "\n\t".join(repr(value).split("\n"))
             s.append("\t{} = {}".format(slot, r))
         return "\n".join(s) + "}"
+
+    def items(self):
+        for slot in self._slots:
+            yield (slot, getattr(self, slot))
 
 
 class APIRoot(ModelBase):
@@ -57,7 +86,11 @@ class Upload(URLObject):
         if hasattr(self, 's3') and self.s3 is not None:
             self.s3 = BucketToken(**self.s3)
         if hasattr(self, 'archive') and self.archive is not None:
-            self.archive = Archive(**self.archive)
+            if not isinstance(self.archive, Archive):
+                if isinstance(self.archive, Mapping):
+                    self.archive = Archive(**self.archive)
+                else:
+                    self.archive = Archive(url=self.archive)
 
 
 class BucketToken(URLObject):
@@ -78,4 +111,23 @@ class Notification(ModelBase):
 
 
 class File(ModelBase):
-    pass
+    def __init__(self, *args, **kwargs):
+        if 'last_modified' in kwargs:
+            try:
+                kwargs['last_modified'] = datetime.fromtimestamp(
+                    kwargs['last_modified'], tz=utc)
+            except TypeError:
+                pass
+        super(File, self).__init__(*args, **kwargs)
+
+
+class ManifestFile(File):
+    def __init__(self, *args, **kwargs):
+        self._base = kwargs.pop('base', '')
+        super(ManifestFile, self).__init__(*args, **kwargs)
+        self._slots.append('path')
+
+    @property
+    def path(self):
+        return filename.toposix(
+            os.path.relpath(self.original_path, self._base))
