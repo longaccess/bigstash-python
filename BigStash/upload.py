@@ -1,3 +1,4 @@
+from __future__ import print_function
 import boto3
 import os
 import sys
@@ -85,7 +86,8 @@ def main():
                 callback=ProgressPercentage(f.original_path))
             print("..OK")
         bigstash.UpdateUploadStatus(upload, 'uploaded')
-        print("Waiting for {}..".format(upload.url), end="", flush=True)
+        print("Waiting for {}..".format(upload.url), end="")
+        sys.stdout.flush()
         retry_args = {
             'wait': 'exponential_sleep',
             'wait_exponential_multiplier': 1000,
@@ -96,7 +98,8 @@ def main():
 
         @retry(**retry_args)
         def refresh(u):
-            print(".", end="", flush=True)
+            print(".", end="")
+            sys.stdout.flush()
             return bigstash.RefreshUploadStatus(u)
 
         print("upload status: {}".format(refresh(upload).status))
