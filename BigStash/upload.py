@@ -47,7 +47,7 @@ def get_api(settings=None):
         k, s = (os.environ['BS_API_KEY'], os.environ['BS_API_SECRET'])
     else:
         auth = BigStashAuth(settings=settings)
-        k, s = auth.GetAPIKey(input("Username: "), getpass("Password: "))
+        k, s = auth.GetAPIKey(raw_input("Username: "), getpass("Password: "))
     return BigStashAPI(key=k, secret=s, settings=settings)
 
 
