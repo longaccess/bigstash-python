@@ -5,6 +5,8 @@ import sys
 import logging
 import posixpath
 import threading
+
+from six.moves import input
 from getpass import getpass
 from BigStash.conf import BigStashAPISettings, DEFAULT_SETTINGS
 from BigStash import BigStashAPI, BigStashError, BigStashAuth
@@ -48,7 +50,7 @@ def get_api(settings=None):
         k, s = (os.environ['BS_API_KEY'], os.environ['BS_API_SECRET'])
     else:
         auth = BigStashAuth(settings=settings)
-        r = auth.GetAPIKey(raw_input("Username: "), getpass("Password: "))
+        r = auth.GetAPIKey(input("Username: "), getpass("Password: "))
         k, s = r['key'], r['secret']
     return BigStashAPI(key=k, secret=s, settings=settings)
 
