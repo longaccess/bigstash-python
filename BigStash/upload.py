@@ -1,9 +1,12 @@
+from __future__ import print_function
 import boto3
 import os
 import sys
 import logging
 import posixpath
 import threading
+
+from six.moves import input
 from getpass import getpass
 from BigStash.conf import BigStashAPISettings, DEFAULT_SETTINGS
 from BigStash import BigStashAPI, BigStashError, BigStashAuth
@@ -47,7 +50,8 @@ def get_api(settings=None):
         k, s = (os.environ['BS_API_KEY'], os.environ['BS_API_SECRET'])
     else:
         auth = BigStashAuth(settings=settings)
-        k, s = auth.GetAPIKey(input("Username: "), getpass("Password: "))
+        r = auth.GetAPIKey(input("Username: "), getpass("Password: "))
+        k, s = r['key'], r['secret']
     return BigStashAPI(key=k, secret=s, settings=settings)
 
 
@@ -84,7 +88,8 @@ def main():
                 callback=ProgressPercentage(f.original_path))
             print("..OK")
         bigstash.UpdateUploadStatus(upload, 'uploaded')
-        print("Waiting for {}..".format(upload.url), end="", flush=True)
+        print("Waiting for {}..".format(upload.url), end="")
+        sys.stdout.flush()
         retry_args = {
             'wait': 'exponential_sleep',
             'wait_exponential_multiplier': 1000,
@@ -95,7 +100,8 @@ def main():
 
         @retry(**retry_args)
         def refresh(u):
-            print(".", end="", flush=True)
+            print(".", end="")
+            sys.stdout.flush()
             return bigstash.RefreshUploadStatus(u)
 
         print("upload status: {}".format(refresh(upload).status))
