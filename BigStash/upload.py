@@ -5,8 +5,8 @@ import sys
 import logging
 import posixpath
 import threading
-
 from six.moves import input
+import json
 from getpass import getpass
 from BigStash.conf import BigStashAPISettings, DEFAULT_SETTINGS
 from BigStash import BigStashAPI, BigStashError, BigStashAuth
@@ -45,13 +45,24 @@ def get_api(settings=None):
         settings = BigStashAPISettings('local')
         settings['base_url'] = os.environ.get(
             'BS_API_URL', DEFAULT_SETTINGS['base_url'])
+    authfile = "~/.config/bigstash/auth.{}".format(settings.profile)
+    authpath = os.path.expanduser(authfile)
     k = s = None
     if all(e in os.environ for e in ('BS_API_KEY', 'BS_API_SECRET')):
         k, s = (os.environ['BS_API_KEY'], os.environ['BS_API_SECRET'])
     else:
-        auth = BigStashAuth(settings=settings)
-        r = auth.GetAPIKey(input("Username: "), getpass("Password: "))
-        k, s = r['key'], r['secret']
+        if os.path.exists(authpath):
+            with open(authpath) as f:
+                r = json.load(f)
+        else:
+            auth = BigStashAuth(settings=settings)
+            r = auth.GetAPIKey(input("Username: "), getpass("Password: "))
+            if input("Save api key to {}? ".format(authfile)).lower() == "y":
+                os.mkdir(os.path.dirname(authpath))
+                with open(authpath, 'w') as f:
+                    json.dump(r, f)
+        k, s = (r['key'], r['secret'])
+
     return BigStashAPI(key=k, secret=s, settings=settings)
 
 
