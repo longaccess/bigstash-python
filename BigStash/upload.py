@@ -5,11 +5,9 @@ import sys
 import logging
 import posixpath
 import threading
-from six.moves import input
-import json
-from getpass import getpass
-from BigStash.conf import BigStashAPISettings, DEFAULT_SETTINGS
-from BigStash import BigStashAPI, BigStashError, BigStashAuth
+from BigStash.auth import get_api_credentials
+from BigStash.conf import BigStashAPISettings
+from BigStash import BigStashAPI, BigStashError
 from BigStash.manifest import Manifest
 from boto3.s3.transfer import S3Transfer, TransferConfig
 from retrying import retry
@@ -40,32 +38,6 @@ class ProgressPercentage(object):
             sys.stdout.flush()
 
 
-def get_api(settings=None):
-    if settings is None:
-        settings = BigStashAPISettings('local')
-        settings['base_url'] = os.environ.get(
-            'BS_API_URL', DEFAULT_SETTINGS['base_url'])
-    authfile = "~/.config/bigstash/auth.{}".format(settings.profile)
-    authpath = os.path.expanduser(authfile)
-    k = s = None
-    if all(e in os.environ for e in ('BS_API_KEY', 'BS_API_SECRET')):
-        k, s = (os.environ['BS_API_KEY'], os.environ['BS_API_SECRET'])
-    else:
-        if os.path.exists(authpath):
-            with open(authpath) as f:
-                r = json.load(f)
-        else:
-            auth = BigStashAuth(settings=settings)
-            r = auth.GetAPIKey(input("Username: "), getpass("Password: "))
-            if input("Save api key to {}? ".format(authfile)).lower() == "y":
-                os.mkdir(os.path.dirname(authpath))
-                with open(authpath, 'w') as f:
-                    json.dump(r, f)
-        k, s = (r['key'], r['secret'])
-
-    return BigStashAPI(key=k, secret=s, settings=settings)
-
-
 def main():
     level = getattr(logging, os.environ.get("BS_LOG_LEVEL", "error").upper())
     logging.basicConfig(level=level)
@@ -79,14 +51,16 @@ def main():
             errtext = [": ".join(e) for e in errors]
             print("\n".join(["There were errors:"] + errtext))
             sys.exit(4)
-        bigstash = get_api()
+        settings = BigStashAPISettings.load_settings()
+        k, s = get_api_credentials(settings)
+        bigstash = BigStashAPI(key=k, secret=s, settings=settings)
         upload = bigstash.CreateUpload(manifest=manifest)
         print("Uploading {}..".format(upload.archive.key))
         s3 = boto3.resource(
             's3', region_name=upload.s3.region,
             aws_access_key_id=upload.s3.token_access_key,
             aws_secret_access_key=upload.s3.token_secret_key,
-            aws_session_token=upload.s3.token_session, use_ssl=False)
+            aws_session_token=upload.s3.token_session)
         config = TransferConfig(
             multipart_threshold=8 * 1024 * 1024,
             max_concurrency=10,

@@ -1,8 +1,12 @@
 from __future__ import print_function
 from BigStash import __version__
-
 from BigStash.base import BigStashAPIBase
 from BigStash.decorators import json_response
+from getpass import getpass
+import os
+import logging
+
+log = logging.getLogger('bigstash.auth')
 
 
 class BigStashAuth(BigStashAPIBase):
@@ -15,24 +19,37 @@ class BigStashAuth(BigStashAPIBase):
         return self.post('tokens', auth=auth, json={"name": name})
 
 
-if __name__ == "__main__":
-    from BigStash.conf import BigStashAPISettings, DEFAULT_SETTINGS
-    import sys
-    import os
-    import logging
-    if len(sys.argv) < 2:
-        print("username required")
-        exit()
-    if len(sys.argv) > 2 and sys.argv[1] == '-d':
-        logging.basicConfig(level=logging.DEBUG)
-        u = sys.argv[2]
+def get_api_credentials(settings, username=None):
+    k = s = None
+    if all(e in os.environ for e in ('BS_API_KEY', 'BS_API_SECRET')):
+        k, s = (os.environ['BS_API_KEY'], os.environ['BS_API_SECRET'])
     else:
+        authfile = 'auth.{}'.format(settings.profile)
+        try:
+            r = settings.read_config_file(authfile)
+        except Exception:
+            log.debug("error reading config file", exc_info=True)
+            print("No saved credentials found")
+            auth = BigStashAuth(settings=settings)
+            r = auth.GetAPIKey(
+                username or input("Username: "), getpass("Password: "))
+            if input("Save api key to settings?").lower() == "y":
+                settings.write_config_file(authfile, r)
+        k, s = (r['key'], r['secret'])
+    return (k, s)
+
+
+if __name__ == "__main__":
+    import sys
+    from BigStash.conf import BigStashAPISettings
+    settings = BigStashAPISettings.load_settings()
+    u = None
+    if len(sys.argv) > 1 and sys.argv[1] == '-d':
+        logging.basicConfig(level=logging.DEBUG)
+        sys.argv = sys.argv[1:]
+    if len(sys.argv) > 1:
         u = sys.argv[1]
 
-    local_settings = BigStashAPISettings('local')
-    local_settings['base_url'] = os.environ.get(
-        'BS_API_URL', DEFAULT_SETTINGS['base_url'])
-    from getpass import getpass
-    p = getpass()
-    auth = BigStashAuth(settings=local_settings)
-    print(auth.GetAPIKey(u, p))
+    k, s = get_api_credentials(settings, username=u)
+    print("Key: {}".format(k))
+    print("Secret: {}".format(s))

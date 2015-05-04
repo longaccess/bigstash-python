@@ -1,7 +1,13 @@
+import os
+import json
+
 DEFAULT_SETTINGS = {
     'base_url': 'https://www.bigstash.co/api/v1/',
     'trust_env': False
 }
+
+DEFAULT_CONFIG_ROOT = os.path.expanduser(
+    os.path.join('~', '.config', 'bigstash'))
 
 
 class BigStashAPISettings(object):
@@ -9,14 +15,20 @@ class BigStashAPISettings(object):
         "default": DEFAULT_SETTINGS
     }
 
-    def __init__(self, profile="default"):
+    def __init__(self, profile=None, root=None):
         """
         Initialize the API settings.
         :param profile: optional settings profile name
         """
+        if profile is None:
+            profile = os.environ.get('BS_PROFILE', 'default')
         self.profile = profile
         if profile is not "default":
             self._settings[profile] = {}
+        self.config_root = root or os.environ.get(
+            'BS_CONFIG_ROOT', DEFAULT_CONFIG_ROOT)
+        if 'BS_API_URL' in os.environ:
+            self['base_url'] = os.environ['BS_API_URL']
 
     def __getitem__(self, key):
         return self._settings[self.profile].get(key)
@@ -26,3 +38,27 @@ class BigStashAPISettings(object):
 
     def __setitem__(self, key, value):
         self._settings[self.profile][key] = value
+
+    @classmethod
+    def load_settings(cls, profile=None, path=None):
+        obj = cls(profile)
+        path = path or obj.get_config_file('profiles')
+        if not os.path.exists(path):
+            return obj
+        with open(path or obj.get_config_file('profiles')) as f:
+            profiles = json.load(f)
+            obj.update(profiles[obj.profile])
+            return obj
+
+    def get_config_file(self, path):
+        return os.path.join(self.config_root, path)
+
+    def read_config_file(self, path):
+        with open(self.get_config_file(path)) as f:
+            return json.load(f)
+
+    def write_config_file(self, path, data):
+        if not os.path.exists(self.config_root):
+            os.makedirs(self.config_root)
+        with open(os.path.join(self.config_root, path), 'w') as f:
+            json.dump(data, f)
