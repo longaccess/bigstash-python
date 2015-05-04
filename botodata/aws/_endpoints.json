@@ -1,7 +1,7 @@
 {
   "_default":[
     {
-      "uri":"{scheme}://{service}.{region}.amazonaws.com.cn",
+      "uri":"http://{service}.{region}.amazonaws.com.cn",
       "constraints":[
         ["region", "startsWith", "cn-"]
       ],
@@ -10,7 +10,7 @@
       }
     },
     {
-      "uri":"{scheme}://{service}.{region}.mockaws.com:9876",
+      "uri":"http://{service}.{region}.mockaws.com:9876",
       "constraints": [
         ["region", "notEquals", "us-mock-1"]
       ],
@@ -19,7 +19,7 @@
       }
     },
     {
-      "uri":"{scheme}://{service}.{region}.amazonaws.com",
+      "uri":"http://{service}.{region}.amazonaws.com",
       "constraints": [
         ["region", "notEquals", null]
       ]
@@ -57,7 +57,7 @@
   ],
   "sts":[
     {
-      "uri":"{scheme}://{service}.cn-north-1.amazonaws.com.cn",
+      "uri":"http://{service}.cn-north-1.amazonaws.com.cn",
       "constraints":[
         ["region", "startsWith", "cn-"]
       ]
@@ -79,7 +79,7 @@
   ],
   "s3":[
     {
-      "uri":"{scheme}://s3.amazonaws.com",
+      "uri":"http://s3.amazonaws.com",
       "constraints":[
         ["region", "oneOf", ["us-east-1", null]]
       ],
@@ -90,7 +90,7 @@
       }
     },
     {
-      "uri":"{scheme}://{service}.{region}.amazonaws.com.cn",
+      "uri":"http://{service}.{region}.amazonaws.com.cn",
       "constraints": [
         ["region", "startsWith", "cn-"]
       ],
@@ -99,7 +99,7 @@
       }
     },
     {
-      "uri":"{scheme}://{service}-{region}.amazonaws.com",
+      "uri":"http://{service}-{region}.amazonaws.com",
       "constraints": [
         ["region", "oneOf", ["us-east-1", "ap-northeast-1", "sa-east-1",
                              "ap-southeast-1", "ap-southeast-2", "us-west-2",
@@ -108,7 +108,7 @@
       ]
     },
     {
-      "uri":"{scheme}://{service}.{region}.mockaws.com:9876",
+      "uri":"http://{service}.{region}.mockaws.com:9876",
       "constraints": [
         ["region", "equals", "us-mock-1"]
       ],
@@ -117,7 +117,7 @@
       }
     },
     {
-      "uri":"{scheme}://{service}.{region}.amazonaws.com",
+      "uri":"http://{service}.{region}.amazonaws.com",
       "constraints": [
         ["region", "notEquals", null]
       ],
