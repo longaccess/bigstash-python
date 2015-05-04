@@ -72,7 +72,7 @@ class BigStashAPI(BigStashAPIBase):
         name = model.__name__.lower() + 's'
         res = {'next': self._top_resource_url(name)}
         while res['next'] is not None:
-            res = json_response(self._get_page)(res['next'])
+            res = self._get_page(res['next'])
             for r in res['results']:
                 yield model(**r)
 
