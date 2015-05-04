@@ -18,7 +18,9 @@ log = logging.getLogger('bigstash.manifest')
 class Manifest(models.ModelBase, collections.MutableMapping):
     def __init__(self, files=None, title=None, *args, **kwargs):
         super(Manifest, self).__init__(
-            size=0, _base=None, *args, **kwargs)
+            size=0, *args, **kwargs)
+        self._base = None
+        self._slots.append('source')
         self._store = dict()
         self._slots.append('title')
         self._title = title
@@ -55,6 +57,10 @@ class Manifest(models.ModelBase, collections.MutableMapping):
     @property
     def base(self):
         return filename.toposix(self._base)
+
+    @property
+    def source(self):
+        return {'prefix': self._base}
 
     @cached_property
     def title(self):
