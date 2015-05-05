@@ -1,5 +1,6 @@
 import os
 import json
+import collections
 
 DEFAULT_SETTINGS = {
     'base_url': 'https://www.bigstash.co/api/v1/',
@@ -10,7 +11,7 @@ DEFAULT_CONFIG_ROOT = os.path.expanduser(
     os.path.join('~', '.config', 'bigstash'))
 
 
-class BigStashAPISettings(object):
+class BigStashAPISettings(collections.MutableMapping):
     _settings = {
         "default": DEFAULT_SETTINGS
     }
@@ -30,14 +31,27 @@ class BigStashAPISettings(object):
         if 'BS_API_URL' in os.environ:
             self['base_url'] = os.environ['BS_API_URL']
 
+    @property
+    def _current_settings(self):
+        return self._settings[self.profile]
+
     def __getitem__(self, key):
-        return self._settings[self.profile].get(key)
+        return self._current_settings.get(key)
+
+    def __delitem__(self, key):
+        del self._current_settings[key]
 
     def __contains__(self, key):
-        return key in self._settings[self.profile]
+        return key in self._current_settings
 
     def __setitem__(self, key, value):
-        self._settings[self.profile][key] = value
+        self._current_settings[key] = value
+
+    def __iter__(self):
+        return iter(self._current_settings)
+
+    def __len__(self):
+        return len(self._current_settings)
 
     @classmethod
     def load_settings(cls, profile=None, path=None):
