@@ -3,11 +3,13 @@ import six
 from BigStash import filename
 from collections import Mapping
 
-from datetime import datetime, timedelta, tzinfo
+from datetime import timedelta, tzinfo
+from datetime import datetime as dt
 
 
 try:
-    from datetime.timezone import utc
+    from datetime import timezone
+    utc = timezone.utc
 except ImportError as e:
     ZERO = timedelta(0)
 
@@ -114,7 +116,7 @@ class File(ModelBase):
     def __init__(self, *args, **kwargs):
         if 'last_modified' in kwargs:
             try:
-                kwargs['last_modified'] = datetime.fromtimestamp(
+                kwargs['last_modified'] = dt.fromtimestamp(
                     kwargs['last_modified'], tz=utc)
             except TypeError:
                 pass
