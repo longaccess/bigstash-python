@@ -22,7 +22,10 @@ install_requires = [
     'httpsig_cffi>=15.0.0, <16.0.0',
     'six>=1.9, <2.0',
     'requests>=2.5.1, <2.6',
-    'retrying'
+    'retrying',
+    'wrapt',
+    'boto3',
+    'cached_property'
 ]
 
 
