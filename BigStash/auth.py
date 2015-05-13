@@ -3,6 +3,7 @@ from BigStash import __version__
 from BigStash.base import BigStashAPIBase
 from BigStash.decorators import json_response
 from getpass import getpass
+from six.moves import input
 import os
 import logging
 
