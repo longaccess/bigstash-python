@@ -1,3 +1,15 @@
+"""bsput
+Usage: 
+  bsput [-t TITLE] FILES...
+  bsput (-h | --help)
+  bsput --version
+
+Options:
+  -h --help                     Show this screen.
+  --version                     Show version
+  -t TITLE --title=TITLE        Set archive title [default: ]
+"""
+
 from __future__ import print_function
 import boto3
 import os
@@ -5,13 +17,14 @@ import sys
 import logging
 import posixpath
 import threading
+from BigStash import __version__ 
 from BigStash.auth import get_api_credentials
 from BigStash.conf import BigStashAPISettings
 from BigStash import BigStashAPI, BigStashError
 from BigStash.manifest import Manifest
 from boto3.s3.transfer import S3Transfer, TransferConfig
 from retrying import retry
-
+from docopt import docopt
 
 log = logging.getLogger('bigstash.uploader')
 
@@ -24,6 +37,11 @@ class ProgressPercentage(object):
         self._lock = threading.Lock()
 
     def __call__(self, bytes_amount):
+        if not self._size :
+            # Handle zero-sized files, that trigger a division-by-zero exception. 
+            sys.stdout.write("\r%s %s / %s (%.2f%%)" % (self._filename, 0, self._size, 100))
+            sys.stdout.flush()
+            return
         # To simplify we'll assume this is hooked up
         # to a single filename.
         with self._lock:
@@ -38,15 +56,12 @@ class ProgressPercentage(object):
             sys.stdout.flush()
 
 
-def main():
+def main(title=None, paths=None):
     level = getattr(logging, os.environ.get("BS_LOG_LEVEL", "error").upper())
     logging.basicConfig(level=level)
-    if len(sys.argv) == 1:
-        print("Usage: {} [file1, file2, ...]".format(sys.argv[0]))
-        sys.exit(3)
     try:
         upload = None
-        manifest, errors = Manifest.from_paths(sys.argv[1:])
+        manifest, errors = Manifest.from_paths(paths=paths, title=title)
         if errors:
             errtext = [": ".join(e) for e in errors]
             print("\n".join(["There were errors:"] + errtext))
@@ -105,4 +120,7 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    args=docopt(__doc__, version=__version__)
+    title=args['--title'] if args['--title'] else None
+    paths=args['FILES']
+    main(title, paths)
