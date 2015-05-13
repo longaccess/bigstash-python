@@ -60,7 +60,6 @@ def main():
     args = docopt(__doc__, version=__version__)
     title = args['--title'] if args['--title'] else None
     paths = args['FILES']
-    main(title, paths)
     level = getattr(logging, os.environ.get("BS_LOG_LEVEL", "error").upper())
     logging.basicConfig(level=level)
     try:
