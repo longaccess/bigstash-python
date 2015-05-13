@@ -1,6 +1,6 @@
 """bsput
 Usage:
-  bsput [-t TITLE] FILES...
+  bsput [-t TITLE] [--no-progress] [--dont-wait] FILES...
   bsput (-h | --help)
   bsput --version
 
@@ -8,6 +8,8 @@ Options:
   -h --help                     Show this screen.
   --version                     Show version
   -t TITLE --title=TITLE        Set archive title [default: ]
+  --no-progress                 Do not show progress messages.
+  --dont-wait                   Do not wait for archive status after files hev been uploaded.
 """
 
 from __future__ import print_function
@@ -55,11 +57,13 @@ class ProgressPercentage(object):
             self._seen_so_far += bytes_amount
             self._write_progress(self._seen_so_far, self._size)
 
-
 def main():
     args = docopt(__doc__, version=__version__)
     title = args['--title'] if args['--title'] else None
     paths = args['FILES']
+    opt_show_progress = True if not args['--no-progress'] else False
+    opt_dont_wait = False if not args['--dont-wait'] else True
+
     level = getattr(logging, os.environ.get("BS_LOG_LEVEL", "error").upper())
     logging.basicConfig(level=level)
     try:
@@ -88,9 +92,13 @@ def main():
             transfer.upload_file(
                 f.original_path, upload.s3.bucket,
                 posixpath.join(upload.s3.prefix, f.path),
-                callback=ProgressPercentage(f.original_path))
-            print("..OK")
+                callback=ProgressPercentage(f.original_path) if opt_show_progress else None)
+            if opt_show_progress:
+                print("..OK")
         bigstash.UpdateUploadStatus(upload, 'uploaded')
+        if opt_dont_wait:
+            sys.stdout.flush()
+            sys.exit(0)
         print("Waiting for {}..".format(upload.url), end="")
         sys.stdout.flush()
         retry_args = {
@@ -106,7 +114,7 @@ def main():
             print(".", end="")
             sys.stdout.flush()
             return bigstash.RefreshUploadStatus(u)
-
+        
         print("upload status: {}".format(refresh(upload).status))
     except OSError as e:
         err = "error"
