@@ -1,5 +1,5 @@
 """bsput
-Usage: 
+Usage:
   bsput [-t TITLE] FILES...
   bsput (-h | --help)
   bsput --version
@@ -17,7 +17,7 @@ import sys
 import logging
 import posixpath
 import threading
-from BigStash import __version__ 
+from BigStash import __version__
 from BigStash.auth import get_api_credentials
 from BigStash.conf import BigStashAPISettings
 from BigStash import BigStashAPI, BigStashError
