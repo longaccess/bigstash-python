@@ -1,5 +1,4 @@
 from __future__ import print_function
-from httpsig_cffi.requests_auth import HTTPSignatureAuth
 from BigStash.base import BigStashAPIBase
 from BigStash.decorators import json_response, no_content_response
 from BigStash.error import BigStashError
@@ -7,6 +6,7 @@ from cached_property import cached_property
 from BigStash import models
 from collections import Mapping
 from BigStash.serialize import model_to_json
+from BigStash.sign import HTTPSignatureAuth
 import logging
 
 log = logging.getLogger('bigstash.api')
