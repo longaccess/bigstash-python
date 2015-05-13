@@ -1,6 +1,6 @@
 """bsput
 Usage:
-  bsput [-t TITLE] [--no-progress] [--dont-wait] FILES...
+  bsput [-t TITLE] [--silent] [--dont-wait] FILES...
   bsput (-h | --help)
   bsput --version
 
@@ -8,8 +8,8 @@ Options:
   -h --help                     Show this screen.
   --version                     Show version
   -t TITLE --title=TITLE        Set archive title [default: ]
-  --no-progress                 Do not show progress messages.
   --dont-wait                   Do not wait for archive status after files hev been uploaded.
+  --silent                      Do not show ANY progress or other messages.
 """
 
 from __future__ import print_function
@@ -61,7 +61,7 @@ def main():
     args = docopt(__doc__, version=__version__)
     title = args['--title'] if args['--title'] else None
     paths = args['FILES']
-    opt_show_progress = True if not args['--no-progress'] else False
+    opt_silent = False if not args['--silent'] else True
     opt_dont_wait = False if not args['--dont-wait'] else True
 
     level = getattr(logging, os.environ.get("BS_LOG_LEVEL", "error").upper())
@@ -77,7 +77,8 @@ def main():
         k, s = get_api_credentials(settings)
         bigstash = BigStashAPI(key=k, secret=s, settings=settings)
         upload = bigstash.CreateUpload(manifest=manifest)
-        print("Uploading {}..".format(upload.archive.key))
+        if not opt_silent:
+            print("Uploading {}..".format(upload.archive.key))
         s3 = boto3.resource(
             's3', region_name=upload.s3.region,
             aws_access_key_id=upload.s3.token_access_key,
@@ -92,14 +93,15 @@ def main():
             transfer.upload_file(
                 f.original_path, upload.s3.bucket,
                 posixpath.join(upload.s3.prefix, f.path),
-                callback=ProgressPercentage(f.original_path) if opt_show_progress else None)
-            if opt_show_progress:
+                callback=ProgressPercentage(f.original_path) if not opt_silent else None)
+            if not opt_silent:
                 print("..OK")
         bigstash.UpdateUploadStatus(upload, 'uploaded')
         if opt_dont_wait:
             sys.stdout.flush()
             sys.exit(0)
-        print("Waiting for {}..".format(upload.url), end="")
+        if not opt_silent:
+            print("Waiting for {}..".format(upload.url), end="")
         sys.stdout.flush()
         retry_args = {
             'wait': 'exponential_sleep',
@@ -111,11 +113,20 @@ def main():
 
         @retry(**retry_args)
         def refresh(u):
-            print(".", end="")
-            sys.stdout.flush()
+            if not opt_silent:
+                print(".", end="")
+                sys.stdout.flush()
             return bigstash.RefreshUploadStatus(u)
-        
-        print("upload status: {}".format(refresh(upload).status))
+        if not opt_silent:
+            print("upload status: ", end="")
+        final_status = refresh(upload).status
+        if not opt_silent:
+            print(final_status)
+        if final_status != 'completed':
+            sys.exit(2)
+        else:
+            sys.exit(0)
+
     except OSError as e:
         err = "error"
         if e.filename is not None:
