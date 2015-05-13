@@ -41,7 +41,7 @@ class ProgressPercentage(object):
     def _write_progress(self, wrote, total):
         percentage = 100
         if total > 0:
-            percentage = (wrote / total) * 100
+            percentage = (wrote / float(total)) * 100
         sys.stdout.write("\r{} {} / {} ({:.2f}%)".format(
             self._filename, wrote, total, percentage))
         sys.stdout.flush()
