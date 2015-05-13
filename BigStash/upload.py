@@ -32,16 +32,19 @@ log = logging.getLogger('bigstash.upload')
 class ProgressPercentage(object):
     def __init__(self, filename):
         self._filename = filename
-        self._size = float(os.path.getsize(filename))
+        self._size = os.path.getsize(filename)
         self._seen_so_far = 0
         self._lock = threading.Lock()
 
+    def _write_progress(self, wrote, total):
+        percentage = 100
+        if total > 0:
+            percentage = (wrote / total) * 100
+        sys.stdout.write("\r{} {} / {} ({:.2f}%)".format(
+            self._filename, wrote, total, percentage))
+        sys.stdout.flush()
+
     def __call__(self, bytes_amount):
-        if not self._size :
-            # Handle zero-sized files, that trigger a division-by-zero exception. 
-            sys.stdout.write("\r%s %s / %s (%.2f%%)" % (self._filename, 0, self._size, 100))
-            sys.stdout.flush()
-            return
         # To simplify we'll assume this is hooked up
         # to a single filename.
         with self._lock:
@@ -50,10 +53,7 @@ class ProgressPercentage(object):
                 # assume we are now only starting the actual transfer
                 self._seen_so_far = 0
             self._seen_so_far += bytes_amount
-            percentage = (self._seen_so_far / self._size) * 100
-            sys.stdout.write("\r%s %s / %s (%.2f%%)" % (
-                self._filename, self._seen_so_far, self._size, percentage))
-            sys.stdout.flush()
+            self._write_progress(self._seen_so_far, self._size)
 
 
 def main(title=None, paths=None):
