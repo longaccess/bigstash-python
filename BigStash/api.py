@@ -1,5 +1,4 @@
 from __future__ import print_function
-from httpsig_cffi.requests_auth import HTTPSignatureAuth
 from BigStash.base import BigStashAPIBase
 from BigStash.decorators import json_response, no_content_response
 from BigStash.error import BigStashError
@@ -10,6 +9,56 @@ from BigStash.serialize import model_to_json
 import logging
 
 log = logging.getLogger('bigstash.api')
+
+from requests.auth import AuthBase
+import urlparse
+import hmac
+import base64
+import hashlib
+
+class Light_HTTPSignatureAuth(AuthBase):
+    def __init__(self, key_id='', secret='', algorithm='rsa-sha256', headers=None, allow_agent=False):
+        self.algorithm = algorithm
+        self.key_id = key_id
+        self.secret = secret
+        self.headers = headers
+        self.signature_string_head = self.build_header_content()
+    
+    def build_header_content(self):
+        param_map = {'keyId': 'hmac-key-1' , 
+                     'algorithm': self.algorithm,
+                     'signature': '%s'}
+        if self.headers:
+            param_map['headers'] = ' '.join(self.headers)
+        kv = map('{0[0]}="{0[1]}"'.format, param_map.items())
+        kv_string = ','.join(kv)
+        sig_string = 'Signature {0}'.format(kv_string)
+        return sig_string
+    
+    def sign(self, data):
+        dig = hmac.new(self.secret, data.encode('utf-8'), hashlib.sha256).digest()
+        return base64.b64encode(dig)
+    def __call__(self, r):
+        url_parts = urlparse.urlparse(r.url)
+        if 'Date' not in r.headers:
+            now = datetime.now()
+            stamp = mktime(now.timetuple())
+            r.headers['Date'] = format_date_time(stamp)
+        if self.headers:
+            signable_list = []
+            for x in self.headers:
+                if x in r.headers:
+                    signable_list.append("%s: %s" % (x, r.headers[x]) )
+                elif x=='(request-target)':
+                    signable_list.append("%s: %s %s" % (x, r.method.lower(), url_parts.path))
+                elif x=='host':
+                    signable_list.append("%s: %s" % (x,url_parts.netloc) )
+            signable = '\n'.join(signable_list)
+        else:
+            signable = r.headers['Date']
+        signature = self.sign(signable)
+        r.headers['Authorization'] = self.signature_string_head % signature      
+        return r
 
 
 class BigStashAPI(BigStashAPIBase):
@@ -45,9 +94,10 @@ class BigStashAPI(BigStashAPIBase):
         # setup auth
         headers['X-Deepfreeze-Api-Key'] = self.key
         signature_headers = ['(request-target)', 'date', 'host']
-        auth = HTTPSignatureAuth(key_id=self.key, secret=self.secret,
+        auth = Light_HTTPSignatureAuth(key_id=self.key, secret=self.secret,
                                  algorithm='hmac-sha256',
                                  headers=signature_headers)
+        print '\n\nAUTH: %s\n\n' % auth
         super(BigStashAPI, self).__init__(auth=auth, *args, **kwargs)
 
     @cached_property
