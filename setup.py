@@ -24,7 +24,8 @@ install_requires = [
     'retrying',
     'wrapt',
     'boto3',
-    'cached_property'
+    'cached_property',
+    'docopt'
 ]
 
 

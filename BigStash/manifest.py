@@ -64,9 +64,12 @@ class Manifest(models.ModelBase, collections.MutableMapping):
 
     @cached_property
     def title(self):
-        if self.base:
+        if self._title:
+            return self._title
+        elif self.base and self.base != '/':
             return os.path.basename(os.path.normpath(self.base))
-        return 'upload-{}'.format(datetime.now().date().isoformat())
+        else:
+            return 'upload-{}'.format(datetime.now().date().isoformat())
 
     @property
     def files(self):
