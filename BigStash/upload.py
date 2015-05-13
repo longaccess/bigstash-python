@@ -56,7 +56,11 @@ class ProgressPercentage(object):
             self._write_progress(self._seen_so_far, self._size)
 
 
-def main(title=None, paths=None):
+def main():
+    args = docopt(__doc__, version=__version__)
+    title = args['--title'] if args['--title'] else None
+    paths = args['FILES']
+    main(title, paths)
     level = getattr(logging, os.environ.get("BS_LOG_LEVEL", "error").upper())
     logging.basicConfig(level=level)
     try:
@@ -120,7 +124,4 @@ def main(title=None, paths=None):
 
 
 if __name__ == "__main__":
-    args=docopt(__doc__, version=__version__)
-    title=args['--title'] if args['--title'] else None
-    paths=args['FILES']
-    main(title, paths)
+    main()
