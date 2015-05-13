@@ -8,7 +8,7 @@ Options:
   -h --help                     Show this screen.
   --version                     Show version
   -t TITLE --title=TITLE        Set archive title [default: ]
-  --dont-wait                   Do not wait for archive status after files hev been uploaded.
+  --dont-wait                   Do not wait for archive status after uploading
   --silent                      Do not show ANY progress or other messages.
 """
 
@@ -57,6 +57,7 @@ class ProgressPercentage(object):
             self._seen_so_far += bytes_amount
             self._write_progress(self._seen_so_far, self._size)
 
+
 def main():
     args = docopt(__doc__, version=__version__)
     title = args['--title'] if args['--title'] else None
@@ -89,11 +90,15 @@ def main():
             max_concurrency=10,
             num_download_attempts=10)
         transfer = S3Transfer(s3.meta.client, config)
+
+        cb = None
         for f in manifest:
+            if not opt_silent:
+                cb = ProgressPercentage(f.original_path)
             transfer.upload_file(
                 f.original_path, upload.s3.bucket,
                 posixpath.join(upload.s3.prefix, f.path),
-                callback=ProgressPercentage(f.original_path) if not opt_silent else None)
+                callback=cb)
             if not opt_silent:
                 print("..OK")
         bigstash.UpdateUploadStatus(upload, 'uploaded')
