@@ -60,8 +60,10 @@ class BigStashAPI(BigStashAPIBase):
         try:
             return self._root[resource]
         except BigStashError:
+            log.debug("error getting top resource url", exc_info=True)
             raise
         except Exception:
+            log.error("error getting top resource url", exc_info=True)
             raise BigStashError(msg)
 
     @json_response

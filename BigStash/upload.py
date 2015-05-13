@@ -26,7 +26,7 @@ from boto3.s3.transfer import S3Transfer, TransferConfig
 from retrying import retry
 from docopt import docopt
 
-log = logging.getLogger('bigstash.uploader')
+log = logging.getLogger('bigstash.upload')
 
 
 class ProgressPercentage(object):
