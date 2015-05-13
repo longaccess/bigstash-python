@@ -97,7 +97,6 @@ class BigStashAPI(BigStashAPIBase):
         auth = Light_HTTPSignatureAuth(key_id=self.key, secret=self.secret,
                                  algorithm='hmac-sha256',
                                  headers=signature_headers)
-        print '\n\nAUTH: %s\n\n' % auth
         super(BigStashAPI, self).__init__(auth=auth, *args, **kwargs)
 
     @cached_property
