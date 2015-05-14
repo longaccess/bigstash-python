@@ -1,20 +1,26 @@
-"""bsput
+"""bgst is a command line client to BigStash.co
+
 Usage:
-  bsput [-t TITLE] [--silent] [--dont-wait] FILES...
-  bsput (-h | --help)
-  bsput --version
+  bgst put [-t TITLE] [--silent] [--dont-wait] FILES...
+  bgst settings [--user=USERNAME] [--password=PASSWORD]
+  bgst settings --reset
+  bgst (-h | --help)
+  bgst --version
 
 Options:
   -h --help                     Show this screen.
-  --version                     Show version
+  --version                     Show version.
   -t TITLE --title=TITLE        Set archive title [default: ]
-  --dont-wait                   Do not wait for archive status after uploading
+  --dont-wait                   Do not wait for archive status after uploading.
   --silent                      Do not show ANY progress or other messages.
+  --username=USERNAME           Use bigstash username.
+  --password=PASSWORD           Use bigstash password.
+  --reset                       Remove saved configuration.
 """
 
 from __future__ import print_function
 import boto3
-import os
+import os, errno
 import sys
 import logging
 import posixpath
@@ -60,6 +66,7 @@ class ProgressPercentage(object):
 
 def main():
     args = docopt(__doc__, version=__version__)
+
     title = args['--title'] if args['--title'] else None
     paths = args['FILES']
     opt_silent = False if not args['--silent'] else True
@@ -67,6 +74,25 @@ def main():
 
     level = getattr(logging, os.environ.get("BS_LOG_LEVEL", "error").upper())
     logging.basicConfig(level=level)
+    if args['put']:
+        bgst_put(args)
+    elif args['settings']:
+        bgst_settings(args)
+
+def bgst_settings(args):
+    settings = BigStashAPISettings.load_settings()
+    if args['--reset']:
+        for config in ('auth',):
+            conf_path= '{}.{}'.format(config, settings.profile)
+        try:
+            os.remove(settings.get_config_file(conf_path))
+        except OSError as e:
+            if e.errno != errno.ENOENT: # errno.ENOENT = no such file or directory
+                raise
+    else:
+        k, s = get_api_credentials(settings, args['--user'], args['--password'])
+
+def bgst_put(args):
     try:
         upload = None
         manifest, errors = Manifest.from_paths(paths=paths, title=title)
