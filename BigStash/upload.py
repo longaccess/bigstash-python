@@ -15,12 +15,14 @@ Options:
   --silent                      Do not show ANY progress or other messages.
   --username=USERNAME           Use bigstash username.
   --password=PASSWORD           Use bigstash password.
-  --reset                       Remove saved configuration and revoke authentication token.
+  --reset                       Remove saved configuration, revoke
+                                authentication token.
 """
 
 from __future__ import print_function
 import boto3
-import os, errno
+import os
+import errno
 import sys
 import logging
 import posixpath
@@ -74,10 +76,11 @@ def main():
     elif args['settings']:
         bgst_settings(args)
 
+
 def bgst_settings(args):
     settings = BigStashAPISettings.load_settings()
     if args['--reset']:
-        authfile= 'auth.{}'.format(settings.profile)
+        authfile = 'auth.{}'.format(settings.profile)
         try:
             r = settings.read_config_file(authfile)
         except IOError as e:
@@ -88,15 +91,18 @@ def bgst_settings(args):
         try:
             api = BigStashAPI(key=r['key'], secret=r['secret'])
             os.remove(settings.get_config_file(authfile))
-            # This is a hack. The API should allow a client to destroy its own key
-            # without knowing the token_id.
-            token_id = r['url'].split('/')[-2] 
+            # This is a hack. The API should allow a client to destroy its own
+            # key without knowing the token_id.
+            token_id = r['url'].split('/')[-2]
             api.DestroyAPIKey(token_id)
         except OSError as e:
-            if e.errno != errno.ENOENT: # errno.ENOENT = no such file or directory
+            # errno.ENOENT = no such file or directory
+            if e.errno != errno.ENOENT:
                 raise
     else:
-        k, s = get_api_credentials(settings, args['--user'], args['--password'])
+        k, s = get_api_credentials(
+            settings, args['--user'], args['--password'])
+
 
 def bgst_put(args):
     try:
@@ -105,7 +111,8 @@ def bgst_put(args):
         opt_silent = False if not args['--silent'] else True
         opt_dont_wait = False if not args['--dont-wait'] else True
         upload = None
-        manifest, errors = Manifest.from_paths(paths=args['FILES'], title=title)
+        manifest, errors = Manifest.from_paths(
+            paths=args['FILES'], title=title)
         if errors:
             errtext = [": ".join(e) for e in errors]
             print("\n".join(["There were errors:"] + errtext))
