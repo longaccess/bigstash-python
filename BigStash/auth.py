@@ -20,7 +20,7 @@ class BigStashAuth(BigStashAPIBase):
         return self.post('tokens', auth=auth, json={"name": name})
 
 
-def get_api_credentials(settings, username=None):
+def get_api_credentials(settings, username=None, password=None):
     k = s = None
     if all(e in os.environ for e in ('BS_API_KEY', 'BS_API_SECRET')):
         k, s = (os.environ['BS_API_KEY'], os.environ['BS_API_SECRET'])
@@ -33,7 +33,7 @@ def get_api_credentials(settings, username=None):
             print("No saved credentials found")
             auth = BigStashAuth(settings=settings)
             r = auth.GetAPIKey(
-                username or input("Username: "), getpass("Password: "))
+                username or input("Username: "), password or getpass("Password: "))
             if input("Save api key to settings? (y/N) ").lower() == "y":
                 settings.write_config_file(authfile, r)
         k, s = (r['key'], r['secret'])
