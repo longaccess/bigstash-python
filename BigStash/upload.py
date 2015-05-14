@@ -67,11 +67,6 @@ class ProgressPercentage(object):
 def main():
     args = docopt(__doc__, version=__version__)
 
-    title = args['--title'] if args['--title'] else None
-    paths = args['FILES']
-    opt_silent = False if not args['--silent'] else True
-    opt_dont_wait = False if not args['--dont-wait'] else True
-
     level = getattr(logging, os.environ.get("BS_LOG_LEVEL", "error").upper())
     logging.basicConfig(level=level)
     if args['put']:
@@ -105,8 +100,12 @@ def bgst_settings(args):
 
 def bgst_put(args):
     try:
+
+        title = args['--title'] if args['--title'] else None
+        opt_silent = False if not args['--silent'] else True
+        opt_dont_wait = False if not args['--dont-wait'] else True
         upload = None
-        manifest, errors = Manifest.from_paths(paths=paths, title=title)
+        manifest, errors = Manifest.from_paths(paths=args['FILES'], title=title)
         if errors:
             errtext = [": ".join(e) for e in errors]
             print("\n".join(["There were errors:"] + errtext))
