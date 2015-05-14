@@ -15,7 +15,7 @@ Options:
   --silent                      Do not show ANY progress or other messages.
   --username=USERNAME           Use bigstash username.
   --password=PASSWORD           Use bigstash password.
-  --reset                       Remove saved configuration.
+  --reset                       Remove saved configuration and revoke authentication token.
 """
 
 from __future__ import print_function
@@ -82,10 +82,21 @@ def main():
 def bgst_settings(args):
     settings = BigStashAPISettings.load_settings()
     if args['--reset']:
-        for config in ('auth',):
-            conf_path= '{}.{}'.format(config, settings.profile)
+        authfile= 'auth.{}'.format(settings.profile)
         try:
-            os.remove(settings.get_config_file(conf_path))
+            r = settings.read_config_file(authfile)
+        except IOError as e:
+            if e.errno == errno.ENOENT:
+                return
+            else:
+                raise
+        try:
+            api = BigStashAPI(key=r['key'], secret=r['secret'])
+            os.remove(settings.get_config_file(authfile))
+            # This is a hack. The API should allow a client to destroy its own key
+            # without knowing the token_id.
+            token_id = r['url'].split('/')[-2] 
+            api.DestroyAPIKey(token_id)
         except OSError as e:
             if e.errno != errno.ENOENT: # errno.ENOENT = no such file or directory
                 raise
