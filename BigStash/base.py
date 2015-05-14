@@ -8,7 +8,7 @@ from requests.structures import CaseInsensitiveDict
 from six.moves.urllib.parse import urlparse
 
 DEFAULT_MEDIA_PARAMS = {
-    'version': '2'
+    'version': '1.0'
 }
 
 DEFAULT_MEDIA_TYPE = 'application/vnd.deepfreeze'
