@@ -3,7 +3,7 @@ import json
 import collections
 
 DEFAULT_SETTINGS = {
-    'base_url': 'https://www.bigstash.co/api/v1/',
+    'base_url': 'https://www.bigstash.co/api/',
     'trust_env': False
 }
 
@@ -24,7 +24,7 @@ class BigStashAPISettings(collections.MutableMapping):
         if profile is None:
             profile = os.environ.get('BS_PROFILE', 'default')
         self.profile = profile
-        if profile is not "default":
+        if profile != "default":
             self._settings[profile] = {}
         self.config_root = root or os.environ.get(
             'BS_CONFIG_ROOT', DEFAULT_CONFIG_ROOT)
@@ -61,7 +61,7 @@ class BigStashAPISettings(collections.MutableMapping):
             return obj
         with open(path or obj.get_config_file('profiles')) as f:
             profiles = json.load(f)
-            obj.update(profiles[obj.profile])
+            obj.update(profiles.get(obj.profile, {}))
             return obj
 
     def get_config_file(self, path):
