@@ -4,6 +4,8 @@ Usage:
   bgst put [-t TITLE] [--silent] [--dont-wait] FILES...
   bgst settings [--user=USERNAME] [--password=PASSWORD]
   bgst settings --reset
+  bgst list [--limit=NUMBER]
+  bgst files (ARCHIVE_ID)
   bgst (-h | --help)
   bgst --version
 
@@ -17,6 +19,7 @@ Options:
   --password=PASSWORD           Use bigstash password.
   --reset                       Remove saved configuration, revoke
                                 authentication token.
+  --limit=NUMBER                Show up to NUMBER results. [default: 100]
 """
 
 from __future__ import print_function
@@ -75,6 +78,34 @@ def main():
         bgst_put(args)
     elif args['settings']:
         bgst_settings(args)
+    elif args['list']:
+        bgst_list_archives(args)
+    elif args['files']:
+        bgst_archive_files(args)
+
+def bgst_archive_files(args):
+    settings = BigStashAPISettings.load_settings()
+    k, s = get_api_credentials(settings)
+    api = BigStashAPI(key=k, secret=s, settings=settings)
+    archive_id = args['ARCHIVE_ID'].split('-')[0]
+    for f in api.GetArchiveFiles(archive_id)['results']:
+        print("{}\t{}".format(f['path'], f['size']))
+    
+def bgst_list_archives(args):
+    settings = BigStashAPISettings.load_settings()
+    k, s = get_api_credentials(settings)
+    api = BigStashAPI(key=k, secret=s, settings=settings)
+    count = 0
+    for archive in api.GetArchives():
+        count = count+1
+        print("{}\t{}\t{}\t{}\t{}".format(
+            archive.key, 
+            archive.status.upper().ljust(8), 
+            archive.created,
+            archive.title, 
+            archive.size))
+        if count >= int(args['--limit']):
+            break
 
 
 def bgst_settings(args):
