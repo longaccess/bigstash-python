@@ -102,7 +102,7 @@ def bgst_list_archives(args):
             archive.key, 
             archive.status.upper().ljust(8), 
             archive.created,
-            archive.title, 
+            archive.title.encode('utf-8'), 
             archive.size))
         if count >= int(args['--limit']):
             break
