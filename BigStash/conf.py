@@ -4,7 +4,9 @@ import collections
 
 DEFAULT_SETTINGS = {
     'base_url': 'https://www.bigstash.co/api/',
-    'trust_env': False
+    'trust_env': False,
+    'verify': True,
+    'log_level': 'ERROR'
 }
 
 DEFAULT_CONFIG_ROOT = os.path.expanduser(
@@ -25,11 +27,12 @@ class BigStashAPISettings(collections.MutableMapping):
             profile = os.environ.get('BS_PROFILE', 'default')
         self.profile = profile
         if profile != "default":
-            self._settings[profile] = {}
+            self._settings[profile] = DEFAULT_SETTINGS
         self.config_root = root or os.environ.get(
             'BS_CONFIG_ROOT', DEFAULT_CONFIG_ROOT)
         if 'BS_API_URL' in os.environ:
             self['base_url'] = os.environ['BS_API_URL']
+        self['log_level'] = os.environ.get("BS_LOG_LEVEL", "error").upper()
 
     @property
     def _current_settings(self):

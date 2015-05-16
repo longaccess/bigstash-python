@@ -1,4 +1,5 @@
 import time
+import logging
 
 from BigStash import __version__
 from .conf import BigStashAPISettings
@@ -56,6 +57,17 @@ class BigStashAPIBase(object):
         self._session = self._setup_session()
 
         super(BigStashAPIBase, self).__init__(*args, **kwargs)
+
+    @classmethod
+    def setup_logging(cls, settings):
+        level = getattr(logging, settings['log_level'])
+        logging.basicConfig(level=level)
+        requests_log = logging.getLogger("requests.packages.urllib3")
+        requests_log.setLevel(level)
+        requests_log.propagate = True
+        if level == logging.DEBUG:
+            from requests.packages.urllib3.connection import HTTPConnection
+            HTTPConnection.debuglevel = 1
 
     def _setup_session(self):
         s = Session()

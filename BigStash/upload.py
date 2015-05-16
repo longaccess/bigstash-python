@@ -72,44 +72,44 @@ class ProgressPercentage(object):
 def main():
     args = docopt(__doc__, version=__version__)
 
-    level = getattr(logging, os.environ.get("BS_LOG_LEVEL", "error").upper())
-    logging.basicConfig(level=level)
-    if args['put']:
-        bgst_put(args)
-    elif args['settings']:
-        bgst_settings(args)
-    elif args['list']:
-        bgst_list_archives(args)
-    elif args['files']:
-        bgst_archive_files(args)
-
-def bgst_archive_files(args):
     settings = BigStashAPISettings.load_settings()
+    BigStashAPI.setup_logging(settings)
+
+    if args['put']:
+        bgst_put(args, settings)
+    elif args['settings']:
+        bgst_settings(args, settings)
+    elif args['list']:
+        bgst_list_archives(args, settings)
+    elif args['files']:
+        bgst_archive_files(args, settings)
+
+
+def bgst_archive_files(args, settings):
     k, s = get_api_credentials(settings)
     api = BigStashAPI(key=k, secret=s, settings=settings)
     archive_id = args['ARCHIVE_ID'].split('-')[0]
     for f in api.GetArchiveFiles(archive_id)['results']:
         print("{}\t{}".format(f['path'], f['size']))
-    
-def bgst_list_archives(args):
-    settings = BigStashAPISettings.load_settings()
+
+
+def bgst_list_archives(args, settings):
     k, s = get_api_credentials(settings)
     api = BigStashAPI(key=k, secret=s, settings=settings)
     count = 0
     for archive in api.GetArchives():
         count = count+1
         print("{}\t{}\t{}\t{}\t{}".format(
-            archive.key, 
-            archive.status.upper().ljust(8), 
+            archive.key,
+            archive.status.upper().ljust(8),
             archive.created,
-            archive.title.encode('utf-8'), 
+            archive.title.encode('utf-8'),
             archive.size))
         if count >= int(args['--limit']):
             break
 
 
-def bgst_settings(args):
-    settings = BigStashAPISettings.load_settings()
+def bgst_settings(args, settings):
     if args['--reset']:
         authfile = 'auth.{}'.format(settings.profile)
         try:
@@ -135,7 +135,7 @@ def bgst_settings(args):
             settings, args['--user'], args['--password'])
 
 
-def bgst_put(args):
+def bgst_put(args, settings):
     try:
 
         title = args['--title'] if args['--title'] else None
@@ -148,7 +148,6 @@ def bgst_put(args):
             errtext = [": ".join(e) for e in errors]
             print("\n".join(["There were errors:"] + errtext))
             sys.exit(4)
-        settings = BigStashAPISettings.load_settings()
         k, s = get_api_credentials(settings)
         bigstash = BigStashAPI(key=k, secret=s, settings=settings)
         upload = bigstash.CreateUpload(manifest=manifest)
