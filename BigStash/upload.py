@@ -143,7 +143,9 @@ def bgst_put(args):
         opt_dont_wait = False if not args['--dont-wait'] else True
         upload = None
         manifest, errors = Manifest.from_paths(
-            paths=args['FILES'], title=title)
+            paths=[f.decode('utf-8') for f in args['FILES']], 
+            title=title
+            )
         if errors:
             errtext = [": ".join(e) for e in errors]
             print("\n".join(["There were errors:"] + errtext))
