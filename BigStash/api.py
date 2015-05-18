@@ -151,6 +151,8 @@ class BigStashAPI(BigStashAPIBase):
     def RefreshUploadStatus(self, upload):
         status = upload.status
         ret = json_response(self.get)(upload.url)
+        log.debug("Refreshed upload {}, current status='{}'".format(
+            upload, ret['status']))
         if ret['status'] == status:
             return upload
         new_archive = ret.get('archive', None)
@@ -190,6 +192,7 @@ class BigStashAPI(BigStashAPIBase):
         :param upload_id: the upload id
         :param status: the new upload status
         """
+        log.debug("Updating {} with status='{}'".format(upload, status))
         return self.patch(upload.url, json={"status": status})
 
     @no_content_response
