@@ -5,6 +5,7 @@ Usage:
   bgst settings [--user=USERNAME] [--password=PASSWORD]
   bgst settings --reset
   bgst list [--limit=NUMBER]
+  bgst info (ARCHIVE_ID)
   bgst files (ARCHIVE_ID)
   bgst notifications [--limit=NUMBER]
   bgst (-h | --help)
@@ -81,6 +82,8 @@ def main():
         bgst_settings(args)
     elif args['list']:
         bgst_list_archives(args)
+    elif args['info']:
+        bgst_archive_info(args)
     elif args['files']:
         bgst_archive_files(args)
     elif args['notifications']:
@@ -240,13 +243,17 @@ def bgst_list_notifications(args):
         if count >= int(args['--limit']):
             break
 
-    """
-    status = u'info'
-    verb = u'Archive 2659-3P99D7: Sharing invitation accepted by Giorgos Manoltzas at giorgos241089@hotmail.com.'
-    href = u'https://www.bigstash.co/a/2659-3P99D7/'
-    id = 101033
-    created = u'2015-04-15T08:05:03Z'
-    """
-
+def bgst_archive_info(args):
+    settings = BigStashAPISettings.load_settings()
+    k, s = get_api_credentials(settings)
+    api = BigStashAPI(key=k, secret=s, settings=settings)
+    archive_id = args['ARCHIVE_ID'].split('-')[0]
+    archive = api.GetArchive(archive_id)
+    print('Archive ID:\t{}'.format(archive['key']))
+    print('Status:    \t{}'.format(archive['status']))
+    print('Created:   \t{}'.format(archive['created']))
+    print('Title:     \t{}'.format(archive['title'].encode('utf-8')))
+    print('Size:      \t{}'.format(archive['size']))
+    
 if __name__ == "__main__":
     main()
