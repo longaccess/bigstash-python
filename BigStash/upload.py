@@ -6,6 +6,7 @@ Usage:
   bgst settings --reset
   bgst list [--limit=NUMBER]
   bgst files (ARCHIVE_ID)
+  bgst notifications [--limit=NUMBER]
   bgst (-h | --help)
   bgst --version
 
@@ -82,6 +83,8 @@ def main():
         bgst_list_archives(args)
     elif args['files']:
         bgst_archive_files(args)
+    elif args['notifications']:
+        bgst_list_notifications(args)
 
 def bgst_archive_files(args):
     settings = BigStashAPISettings.load_settings()
@@ -221,6 +224,29 @@ def bgst_put(args):
         log.error("error", exc_info=True)
         sys.exit(1)
 
+def bgst_list_notifications(args):
+    settings = BigStashAPISettings.load_settings()
+    k, s = get_api_credentials(settings)
+    api = BigStashAPI(key=k, secret=s, settings=settings)
+    count = 0
+    for notification in api.GetNotifications():
+        count = count+1
+        print("{}\t{}\t{}\t{}".format(
+            notification.created, 
+            notification.status.upper().ljust(8), 
+            notification.id,
+            notification.verb.encode('utf-8')
+            ))
+        if count >= int(args['--limit']):
+            break
+
+    """
+    status = u'info'
+    verb = u'Archive 2659-3P99D7: Sharing invitation accepted by Giorgos Manoltzas at giorgos241089@hotmail.com.'
+    href = u'https://www.bigstash.co/a/2659-3P99D7/'
+    id = 101033
+    created = u'2015-04-15T08:05:03Z'
+    """
 
 if __name__ == "__main__":
     main()
