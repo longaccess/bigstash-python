@@ -20,7 +20,7 @@ Options:
   --password=PASSWORD           Use bigstash password.
   --reset                       Remove saved configuration, revoke
                                 authentication token.
-  --limit=NUMBER                Show up to NUMBER results. [default: 100]
+  --limit=NUMBER                Show up to NUMBER results. [default: 10]
 """
 
 from __future__ import print_function
