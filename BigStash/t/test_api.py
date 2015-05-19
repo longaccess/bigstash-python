@@ -60,7 +60,7 @@ class APITestCase(TestCase):
 
     def test_get_upload_details(self):
         upload_id = 1
-        upload = self.api.GetUpload(upload_id)
+        upload, headers = self.api.GetUpload(upload_id)
         keys = [u'status', u'comment', u'created', u'url', u's3', u'archive']
         self.assertListEqual(sorted(keys), sorted(upload.keys()))
 

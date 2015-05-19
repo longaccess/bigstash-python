@@ -5,8 +5,8 @@ from BigStash import __version__
 from .conf import BigStashAPISettings
 from requests import Session
 from requests.sessions import merge_setting
-from requests.structures import CaseInsensitiveDict
 from six.moves.urllib.parse import urlparse
+from BigStash.structures import CaseInsensitiveDict
 
 DEFAULT_MEDIA_PARAMS = {
     'version': '1.0'

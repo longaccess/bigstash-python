@@ -1,10 +1,9 @@
 from __future__ import print_function
 from BigStash.base import BigStashAPIBase
 from BigStash.decorators import json_response, no_content_response
-from BigStash.error import BigStashError
+from BigStash.error import BigStashError, ResourceNotModified
 from cached_property import cached_property
 from BigStash import models
-from collections import Mapping
 from BigStash.serialize import model_to_json
 from BigStash.sign import HTTPSignatureAuth
 import logging
@@ -53,8 +52,12 @@ class BigStashAPI(BigStashAPIBase):
 
     @cached_property
     @json_response
-    def _root(self):
+    def _root_resource(self):
         return self.get('')
+
+    @property
+    def _root(self):
+        return self._root_resource[0]  # we only care about the body
 
     def _top_resource_url(self, resource):
         msg = "invalid resource '{}'".format(resource)
@@ -75,9 +78,20 @@ class BigStashAPI(BigStashAPIBase):
         name = model.__name__.lower() + 's'
         res = {'next': self._top_resource_url(name)}
         while res['next'] is not None:
-            res = self._get_page(res['next'])
-            for r in res['results']:
+            body, headers = self._get_page(res['next'])
+            for r in body['results']:
                 yield model(**r)
+
+    def _refresh_resource(self, obj, **kwargs):
+        lm = obj.get_meta('last-modified')
+        if lm is not None:
+            hdrs = kwargs.setdefault('headers', {})
+            hdrs['If-Modified-Since'] = lm
+        try:
+            r, h = json_response(self.get)(obj.url, **kwargs)
+            return obj.__class__(meta=h, **r)
+        except ResourceNotModified:
+            return obj
 
     def _add_pagination_param(self, params={}, page=None):
         """
@@ -111,7 +125,8 @@ class BigStashAPI(BigStashAPIBase):
 
     def GetUser(self):
         """Get the user resource"""
-        return models.User(**self._get_user())
+        body, headers = self._get_user()
+        return models.User(meta=headers, **body)
 
     @json_response
     def GetArchive(self, archive_id):
@@ -143,23 +158,16 @@ class BigStashAPI(BigStashAPIBase):
         :param title: the archive title
         :param size: the archive size in bytes
         """
-        ret = json_response(self.post)(
+        body, headers = json_response(self.post)(
             self._top_resource_url('archives'),
             json={'title': title, 'size': size}, **kwargs)
-        return models.Archive(**ret)
+        return models.Archive(meta=headers, **body)
 
     def RefreshUploadStatus(self, upload):
-        status = upload.status
-        ret = json_response(self.get)(upload.url)
-        log.debug("Refreshed upload {}, current status='{}'".format(
-            upload, ret['status']))
-        if ret['status'] == status:
-            return upload
-        new_archive = ret.get('archive', None)
-        if new_archive and not isinstance(new_archive, Mapping):
-            new_archive = json_response(self.get)(new_archive)
-        ret['archive'] = models.Archive(**new_archive)
-        return upload.__class__(**ret)
+        log.debug("Refreshing upload {}".format(upload))
+        upload = self._refresh_resource(upload)
+        log.debug("Refreshed upload {}".format(upload))
+        return upload
 
     def CreateUpload(self, archive=None, manifest=None, **kwargs):
         """ Create a new upload for an archive
@@ -172,28 +180,24 @@ class BigStashAPI(BigStashAPIBase):
         else:
             url = self._top_resource_url('uploads')
         kwargs['data'] = model_to_json(manifest)
-        ret = json_response(self.post)(url, **kwargs)
-        if archive is None:
-            new_archive = ret.get('archive', None)
-            if new_archive and not isinstance(new_archive, Mapping):
-                new_archive = json_response(self.get)(new_archive)
-            archive = models.Archive(**new_archive)
-        ret['archive'] = archive
-        return models.Upload(**ret)
+        body, headers = json_response(self.post)(url, **kwargs)
+        return models.Upload(meta=headers, **body)
 
     @json_response
     def UpdateUploadFiles(self, upload, files=None):
         pass
 
-    @json_response
     def UpdateUploadStatus(self, upload, status):
         """ Update an upload's status
 
         :param upload_id: the upload id
         :param status: the new upload status
         """
+        patch = {"status": status}
         log.debug("Updating {} with status='{}'".format(upload, status))
-        return self.patch(upload.url, json={"status": status})
+        body, headers = json_response(self.patch)(
+            upload.url, json=patch)
+        upload.update(patch, headers)
 
     @no_content_response
     def CancelUpload(self, upload_id):

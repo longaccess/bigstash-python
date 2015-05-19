@@ -16,3 +16,7 @@ class BigStashClientError(BigStashError):
 
 class BigStashForbiddenError(BigStashClientError):
     pass
+
+
+class ResourceNotModified(Exception):
+    pass

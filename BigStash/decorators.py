@@ -1,5 +1,5 @@
 from requests.exceptions import RequestException
-from .error import BigStashError, BigStashForbiddenError
+from .error import BigStashError, BigStashForbiddenError, ResourceNotModified
 from wrapt import decorator
 from collections import Mapping
 import logging
@@ -15,9 +15,9 @@ def json_response(wrapped, instance, args, kwargs):
         r = wrapped(*args, **kwargs)
         ctype = r.headers.get('content-type', 'application/json')
         r.raise_for_status()
-        json = r.json()
-        json['_type'] = ctype
-        return json
+        if r.status_code == 304:
+            raise ResourceNotModified()
+        return r.json(), r.headers
     except RequestException as e:
         text = e.response.reason
         body = e.response.json() if 'json' in ctype else e.response.text

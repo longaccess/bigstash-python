@@ -1,6 +1,7 @@
 import os.path
 import six
 from BigStash import filename
+from BigStash.structures import ObjectList, CaseInsensitiveDict
 from collections import Mapping
 
 from datetime import timedelta, tzinfo
@@ -28,23 +29,63 @@ except ImportError as e:
     utc = UTC()
 
 
+class ModelMeta(CaseInsensitiveDict):
+    fields = [
+        'content-type',
+        'last-modified'
+    ]
+
+    defaults = {
+        'content-type': 'application/json'
+    }
+
+    def _filter_fields(self, data):
+        for k in self.fields:
+            if k in data:
+                yield (k, data[k])
+            elif k in self.defaults:
+                yield (k, self.defaults[k])
+
+    def __init__(self, data=None, **kwargs):
+        kw = {}
+        if data is not None:
+            kw = dict(self._filter_fields(data))
+        kw.update(dict(self._filter_fields(kwargs)))
+        super(ModelMeta, self).__init__(**kw)
+
+
 class ModelBase(object):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, meta=None, *args, **kwargs):
         self._slots = []
+        self._meta = ModelMeta(meta or {})
         for key, value in six.iteritems(kwargs):
-            self._slots.append(key)
-            setattr(self, key, value)
+            if not key.startswith('_'):
+                self._slots.append(key)
+                setattr(self, key, value)
 
     def __repr__(self):
+        meta = ""
+        if len(self._meta) > 0:
+            meta = repr(self._meta)
+
         s = ["{ " + super(ModelBase, self).__repr__()]
         for slot, value in self.items():
             r = "\n\t".join(repr(value).split("\n"))
             s.append("\t{} = {}".format(slot, r))
-        return "\n".join(s) + "}"
+        return "\n".join(s) + "}" + meta
 
     def items(self):
         for slot in self._slots:
             yield (slot, getattr(self, slot))
+
+    def get_meta(self, attr):
+        return self._meta.get(attr, None)
+
+    def update(self, patch, meta):
+        for key in self._slots:
+            if key in patch:
+                setattr(self, key, patch[key])
+        self._meta.update(meta)
 
 
 class APIRoot(ModelBase):
@@ -57,25 +98,6 @@ class URLObject(ModelBase):
     def __unicode__(self):
         return "{}: {}".format(
             self.__class__.__name__, getattr(self, self._href_attr, 'n/a'))
-
-
-class ObjectList(object):
-    def __init__(self, klass, objects=[], next=None):
-        self.klass = klass
-        self.objects = objects
-        self.next = next
-
-    def __iter__(self):
-        return (self.klass(**data) for data in self.objects)
-
-    def __repr__(self):
-        s = []
-        for obj in self:
-            s.append("\t" + "\n\t".join(repr(obj).split("\n")))
-        if self.next is not None:
-            s.append("\t...")
-        return ("{ " + super(ObjectList, self).__repr__() +
-                " [\n" + ",\n".join(s) + "]}")
 
 
 class Archive(URLObject):
