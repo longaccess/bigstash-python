@@ -5,7 +5,9 @@ Usage:
   bgst settings [--user=USERNAME] [--password=PASSWORD]
   bgst settings --reset
   bgst list [--limit=NUMBER]
+  bgst info (ARCHIVE_ID)
   bgst files (ARCHIVE_ID)
+  bgst notifications [--limit=NUMBER]
   bgst (-h | --help)
   bgst --version
 
@@ -19,7 +21,7 @@ Options:
   --password=PASSWORD           Use bigstash password.
   --reset                       Remove saved configuration, revoke
                                 authentication token.
-  --limit=NUMBER                Show up to NUMBER results. [default: 100]
+  --limit=NUMBER                Show up to NUMBER results. [default: 10]
 """
 
 from __future__ import print_function
@@ -80,8 +82,12 @@ def main():
         bgst_settings(args)
     elif args['list']:
         bgst_list_archives(args)
+    elif args['info']:
+        bgst_archive_info(args)
     elif args['files']:
         bgst_archive_files(args)
+    elif args['notifications']:
+        bgst_list_notifications(args)
 
 def bgst_archive_files(args):
     settings = BigStashAPISettings.load_settings()
@@ -143,7 +149,9 @@ def bgst_put(args):
         opt_dont_wait = False if not args['--dont-wait'] else True
         upload = None
         manifest, errors = Manifest.from_paths(
-            paths=args['FILES'], title=title)
+            paths=[f.decode('utf-8') for f in args['FILES']], 
+            title=title
+            )
         if errors:
             errtext = [": ".join(e) for e in errors]
             print("\n".join(["There were errors:"] + errtext))
@@ -219,6 +227,33 @@ def bgst_put(args):
         log.error("error", exc_info=True)
         sys.exit(1)
 
+def bgst_list_notifications(args):
+    settings = BigStashAPISettings.load_settings()
+    k, s = get_api_credentials(settings)
+    api = BigStashAPI(key=k, secret=s, settings=settings)
+    count = 0
+    for notification in api.GetNotifications():
+        count = count+1
+        print("{}\t{}\t{}\t{}".format(
+            notification.created, 
+            notification.status.upper().ljust(8), 
+            notification.id,
+            notification.verb.encode('utf-8')
+            ))
+        if count >= int(args['--limit']):
+            break
 
+def bgst_archive_info(args):
+    settings = BigStashAPISettings.load_settings()
+    k, s = get_api_credentials(settings)
+    api = BigStashAPI(key=k, secret=s, settings=settings)
+    archive_id = args['ARCHIVE_ID'].split('-')[0]
+    archive = api.GetArchive(archive_id)
+    print('Archive ID:\t{}'.format(archive['key']))
+    print('Status:    \t{}'.format(archive['status']))
+    print('Created:   \t{}'.format(archive['created']))
+    print('Title:     \t{}'.format(archive['title'].encode('utf-8')))
+    print('Size:      \t{}'.format(archive['size']))
+    
 if __name__ == "__main__":
     main()
