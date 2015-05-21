@@ -3,7 +3,7 @@ import json
 import collections
 
 DEFAULT_SETTINGS = {
-    'base_url': 'https://www.bigstash.co/api/v1/',
+    'base_url': 'https://www.bigstash.co/api/',
     'trust_env': False
 }
 

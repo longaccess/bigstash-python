@@ -18,6 +18,7 @@ class BigStashAPI(BigStashAPIBase):
     UPLOAD_DETAIL = "uploads/{id}"
     ARCHIVE_LIST = "archives"
     ARCHIVE_DETAIL = "archives/{id}"
+    ARCHIVE_FILES = "archives/{id}/files/"
     ARCHIVE_UPLOAD = "archives/{id}/upload"
     TOKEN_DETAIL = "tokens/{id}"
     NOTIFICATION_LIST = "notifications"
@@ -119,6 +120,14 @@ class BigStashAPI(BigStashAPIBase):
         :param archive_id: the archive id
         """
         return self.get(self.ARCHIVE_DETAIL.format(id=archive_id))
+
+    @json_response
+    def GetArchiveFiles(self, archive_id):
+        """ Get archive files
+
+        :param archive_id: the archive id
+        """
+        return self.get(self.ARCHIVE_FILES.format(id=archive_id))
 
     @json_response
     def GetUpload(self, upload_id):
