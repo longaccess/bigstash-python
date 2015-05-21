@@ -128,13 +128,14 @@ class BigStashAPI(BigStashAPIBase):
         body, headers = self._get_user()
         return models.User(meta=headers, **body)
 
-    @json_response
     def GetArchive(self, archive_id):
         """ Get details for an archive
 
         :param archive_id: the archive id
         """
-        return self.get(self.ARCHIVE_DETAIL.format(id=archive_id))
+        body, headers = json_response(self.get)(
+            self.ARCHIVE_DETAIL.format(id=archive_id))
+        return models.Archive(meta=headers, **body)
 
     @json_response
     def GetArchiveFiles(self, archive_id):
