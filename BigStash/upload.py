@@ -97,8 +97,8 @@ def bgst_archive_files(args, settings):
     k, s = get_api_credentials(settings)
     api = BigStashAPI(key=k, secret=s, settings=settings)
     archive_id = args['ARCHIVE_ID'].split('-')[0]
-    for f in api.GetArchiveFiles(archive_id)[0]['results']:
-        print("{}\t{}".format(f['path'], f['size']))
+    for f in api.get_all_objects(api.GetArchive(archive_id).files):
+        print("{}\t{}".format(f.path, f.size))
 
 
 def bgst_list_archives(args, settings):

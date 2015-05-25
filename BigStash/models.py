@@ -101,7 +101,11 @@ class URLObject(ModelBase):
 
 
 class Archive(URLObject):
-    pass
+    def __init__(self, *args, **kwargs):
+        super(Archive, self).__init__(*args, **kwargs)
+        if hasattr(self, 'files') and self.files is not None:
+            if not isinstance(self.files, ObjectList):
+                self.files = ObjectList(File, [], self.files)
 
 
 class Upload(URLObject):

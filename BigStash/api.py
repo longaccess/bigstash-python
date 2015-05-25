@@ -6,6 +6,7 @@ from cached_property import cached_property
 from BigStash import models
 from BigStash.serialize import model_to_json
 from BigStash.sign import HTTPSignatureAuth
+from itertools import chain
 import logging
 
 log = logging.getLogger('bigstash.api')
@@ -81,6 +82,18 @@ class BigStashAPI(BigStashAPIBase):
             body, headers = self._get_page(res['next'])
             for r in body['results']:
                 yield model(**r)
+
+    def _list_next(self, olist):
+        while olist.next is not None:
+            body, headers = self._get_page(olist.next)
+            olist.next = body['next']
+            for r in body['results']:
+                obj = olist.klass(**r)
+                olist.objects.append(obj)
+                yield obj
+
+    def get_all_objects(self, olist):
+        return chain(olist, self._list_next(olist))
 
     def _refresh_resource(self, obj, **kwargs):
         lm = obj.get_meta('last-modified')
