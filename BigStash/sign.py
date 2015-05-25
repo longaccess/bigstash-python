@@ -56,7 +56,10 @@ class Light_HTTPSignatureAuth(AuthBase):
                     signable_list.append("%s: %s" % (x, r.headers[x]))
                 elif x == '(request-target)':
                     signable_list.append(
-                        "%s: %s %s" % (x, r.method.lower(), url_parts.path))
+                        "%s: %s %s" % (
+                            x, 
+                            r.method.lower(), 
+                            url_parts.path if not url_parts.query else '%s?%s' % (url_parts.path, url_parts.query)))
                 elif x == 'host':
                     signable_list.append("%s: %s" % (x, url_parts.netloc))
             signable = '\n'.join(signable_list)
