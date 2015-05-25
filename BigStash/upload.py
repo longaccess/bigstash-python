@@ -151,7 +151,7 @@ def bgst_put(args, settings):
         opt_dont_wait = False if not args['--dont-wait'] else True
         upload = None
         manifest, errors = Manifest.from_paths(
-            paths=[f.decode('utf-8') for f in args['FILES']], 
+            paths=[f.decode('utf-8') for f in args['FILES']],
             title=title
             )
         if errors:
@@ -228,6 +228,7 @@ def bgst_put(args, settings):
         log.error("error", exc_info=True)
         sys.exit(1)
 
+
 def bgst_list_notifications(args, settings):
     k, s = get_api_credentials(settings)
     api = BigStashAPI(key=k, secret=s, settings=settings)
@@ -235,24 +236,26 @@ def bgst_list_notifications(args, settings):
     for notification in api.GetNotifications():
         count = count+1
         print("{}\t{}\t{}\t{}".format(
-            notification.created, 
-            notification.status.upper().ljust(8), 
+            notification.created,
+            notification.status.upper().ljust(8),
             notification.id,
             notification.verb.encode('utf-8')
             ))
         if count >= int(args['--limit']):
             break
 
+
 def bgst_archive_info(args, settings):
     k, s = get_api_credentials(settings)
     api = BigStashAPI(key=k, secret=s, settings=settings)
     archive_id = args['ARCHIVE_ID'].split('-')[0]
     archive = api.GetArchive(archive_id)
-    print('Archive ID:\t{}'.format(archive.key) )
+    print('Archive ID:\t{}'.format(archive.key))
     print('Status:    \t{}'.format(archive.status))
     print('Created:   \t{}'.format(archive.created))
     print('Title:     \t{}'.format(archive.title.encode('utf-8')))
     print('Size:      \t{}'.format(archive.size))
-    
+
+
 if __name__ == "__main__":
     main()
