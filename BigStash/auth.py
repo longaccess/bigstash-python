@@ -32,8 +32,8 @@ def get_api_credentials(settings, username=None, password=None):
             log.debug("error reading config file", exc_info=True)
             print("No saved credentials found")
             auth = BigStashAuth(settings=settings)
-            r = auth.GetAPIKey(
-                username or input("Username: "), password or getpass("Password: "))
+            r, _ = auth.GetAPIKey(username or input("Username: "),
+                                  password or getpass("Password: "))
             if input("Save api key to settings? (y/N) ").lower() == "y":
                 settings.write_config_file(authfile, r)
         k, s = (r['key'], r['secret'])
