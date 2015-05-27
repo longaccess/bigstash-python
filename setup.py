@@ -18,7 +18,6 @@ def pep386adapt(version):
     return version
 
 install_requires = [
-    'boto>=2.14, <3',
     'six>=1.9, <2.0',
     'requests>=2.5.1, <2.6',
     'retrying',
