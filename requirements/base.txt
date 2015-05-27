@@ -18,6 +18,7 @@ enum34==1.0.4
 cached-property==1.0.0
 # sha256: CMA5Vgptov5PLEJtB2bihNO3NuNV-N0ks3NnsLtBlzs
 retrying==1.3.3
-
+# sha256: D4qsMg__UMHFFfeD0El1UE5vHn8u9GXq5XtNfgU2lnY
 boto3==0.0.17
+# sha256: SbOoJSgL1ms6qDWF71nEqMgvLIpSLb51SovI0IyFxJE
 docopt==0.6.2
