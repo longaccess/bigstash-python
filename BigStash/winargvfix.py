@@ -1,17 +1,16 @@
 import os
 import sys
-from ctypes import (WINFUNCTYPE, windll, POINTER, byref, c_int,
+from ctypes import (windll, POINTER, byref, c_int,
                     create_unicode_buffer, c_wchar_p)
-from ctypes.wintypes import LPWSTR, LPCWSTR
 
 
 def fix_env_on_windows():
     def getEnvironmentVariable(name):
-        name= unicode(name) # make sure string argument is unicode
-        n= windll.kernel32.GetEnvironmentVariableW(name, None, 0)
-        if n==0:
+        name = unicode(name)  # make sure string argument is unicode
+        n = windll.kernel32.GetEnvironmentVariableW(name, None, 0)
+        if n == 0:
             return None
-        buf= create_unicode_buffer(u'\0'*n)
+        buf = create_unicode_buffer(u'\0'*n)
         windll.kernel32.GetEnvironmentVariableW(name, buf, n)
         return buf.value
     for k in os.environ.keys():
@@ -43,8 +42,8 @@ def fix_argv_on_windows():
                 break
             argv = argv[1:]
             if arg == '-m':
-                # sys.argv[0] should really be the absolute path of the module source,
-                # but never mind
+                # sys.argv[0] should really be the absolute path of the module
+                # source, but never mind
                 break
             if arg == '-c':
                 argv[0] = '-c'

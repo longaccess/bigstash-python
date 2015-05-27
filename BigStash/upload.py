@@ -30,7 +30,6 @@ import six
 import sys
 import os
 import errno
-import sys
 import logging
 import posixpath
 import threading
