@@ -26,6 +26,8 @@ Options:
 
 from __future__ import print_function
 import boto3
+import six
+import sys
 import os
 import errno
 import sys
@@ -44,9 +46,15 @@ from docopt import docopt
 log = logging.getLogger('bigstash.upload')
 
 
+def smart_str(s):
+    if isinstance(s, six.text_type):
+        return s
+    return s.decode('utf-8')
+
+
 class ProgressPercentage(object):
     def __init__(self, filename):
-        self._filename = filename
+        self._filename = smart_str(filename)
         self._size = os.path.getsize(filename)
         self._seen_so_far = 0
         self._lock = threading.Lock()
@@ -55,7 +63,7 @@ class ProgressPercentage(object):
         percentage = 100
         if total > 0:
             percentage = (wrote / float(total)) * 100
-        sys.stdout.write("\r{} {} / {} ({:.2f}%)".format(
+        sys.stdout.write(u"\r{} {} / {} ({:.2f}%)".format(
             self._filename, wrote, total, percentage))
         sys.stdout.flush()
 
@@ -72,7 +80,12 @@ class ProgressPercentage(object):
 
 
 def main():
-    args = docopt(__doc__, version=__version__)
+    argv = sys.argv
+    if not six.PY3 and os.name == 'nt':
+        from BigStash.winargvfix import fix_argv_on_windows, fix_env_on_windows
+        argv = fix_argv_on_windows()
+        fix_env_on_windows()
+    args = docopt(__doc__, argv=argv[1:], version=__version__)
 
     settings = BigStashAPISettings.load_settings()
     BigStashAPI.setup_logging(settings)
@@ -145,15 +158,12 @@ def bgst_settings(args, settings):
 
 def bgst_put(args, settings):
     try:
-
         title = args['--title'] if args['--title'] else None
         opt_silent = False if not args['--silent'] else True
         opt_dont_wait = False if not args['--dont-wait'] else True
         upload = None
-        manifest, errors = Manifest.from_paths(
-            paths=[f.decode('utf-8') for f in args['FILES']],
-            title=title
-            )
+        filepaths = map(smart_str, args['FILES'])
+        manifest, errors = Manifest.from_paths(paths=filepaths, title=title)
         if errors:
             errtext = [": ".join(e) for e in errors]
             print("\n".join(["There were errors:"] + errtext))
