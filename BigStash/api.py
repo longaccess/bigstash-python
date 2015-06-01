@@ -77,9 +77,9 @@ class BigStashAPI(BigStashAPIBase):
 
     def _get_top_list(self, model):
         name = model.__name__.lower() + 's'
-        res = {'next': self._top_resource_url(name)}
-        while res['next'] is not None:
-            body, headers = self._get_page(res['next'])
+        body = {'next': self._top_resource_url(name)}
+        while body['next'] is not None:
+            body, headers = self._get_page(body['next'])
             for r in body['results']:
                 yield model(**r)
 
