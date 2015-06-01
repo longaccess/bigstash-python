@@ -33,6 +33,7 @@ import errno
 import logging
 import posixpath
 import threading
+from wrapt import decorator
 from BigStash import __version__
 from BigStash.auth import get_api_credentials
 from BigStash.conf import BigStashAPISettings
@@ -49,6 +50,23 @@ def smart_str(s):
     if isinstance(s, six.text_type):
         return s
     return s.decode('utf-8')
+
+
+@decorator
+def handles_encoding_errors(wrapped, instance, args, kwargs):
+    try:
+        return wrapped(*args, **kwargs)
+    except UnicodeEncodeError:
+        outenc = sys.stdout.encoding
+        log.debug("Error while outputting to terminal", exc_info=True)
+        if not outenc or outenc.lower() not in ('utf-8', 'cp65001'):
+            sys.stderr.write(
+                "There was an error while trying to encode data for display "
+                "to your terminal. If your terminal is capable of displaying "
+                "unicode characters you may get around the problem by setting "
+                "PYTHONIOENCODING=UTF-8 in the environment\n")
+            sys.exit(1)
+        raise
 
 
 class ProgressPercentage(object):
@@ -79,6 +97,13 @@ class ProgressPercentage(object):
 
 
 def main():
+    outenc = sys.stdout.encoding
+    if not outenc or outenc.lower() not in ('utf-8', 'cp65001'):
+        sys.stderr.write(
+            "WARNING: terminal doesn't seem to support unicode.\n"
+            "If this is incorrect, fix your locale settings or "
+            "set PYTHONIOENCODING='UTF-8' in the environment\n"
+            "(python reported output encoding: '{}')\n".format(outenc))
     argv = sys.argv
     if not six.PY3 and os.name == 'nt':
         from BigStash.winargvfix import fix_argv_on_windows, fix_env_on_windows
@@ -88,6 +113,13 @@ def main():
 
     settings = BigStashAPISettings.load_settings()
     BigStashAPI.setup_logging(settings)
+    if os.name == 'nt':
+        try:
+            import win_unicode_console
+            win_unicode_console.enable()
+        except ImportError:
+            log.debug("win_unicode_console not found", exc_info=True)
+            pass
 
     if args['put']:
         bgst_put(args, settings)
@@ -99,31 +131,31 @@ def main():
         bgst_archive_files(args, settings)
     elif args['info']:
         bgst_archive_info(args, settings)
-    elif args['files']:
-        bgst_archive_files(args, settings)
     elif args['notifications']:
         bgst_list_notifications(args, settings)
 
 
+@handles_encoding_errors
 def bgst_archive_files(args, settings):
     k, s = get_api_credentials(settings)
     api = BigStashAPI(key=k, secret=s, settings=settings)
     archive_id = args['ARCHIVE_ID'].split('-')[0]
     for f in api.get_all_objects(api.GetArchive(archive_id).files):
-        print("{}\t{}".format(f.path, f.size))
+        print(u"{}\t{}".format(f.path, f.size))
 
 
+@handles_encoding_errors
 def bgst_list_archives(args, settings):
     k, s = get_api_credentials(settings)
     api = BigStashAPI(key=k, secret=s, settings=settings)
     count = 0
     for archive in api.GetArchives():
         count = count+1
-        print("{}\t{}\t{}\t{}\t{}".format(
+        print(u"{}\t{}\t{}\t{}\t{}".format(
             archive.key,
             archive.status.upper().ljust(8),
             archive.created,
-            archive.title.encode('utf-8'),
+            archive.title,
             archive.size))
         if count >= int(args['--limit']):
             break
@@ -155,6 +187,7 @@ def bgst_settings(args, settings):
             settings, args['--user'], args['--password'])
 
 
+@handles_encoding_errors
 def bgst_put(args, settings):
     try:
         title = args['--title'] if args['--title'] else None
@@ -238,32 +271,33 @@ def bgst_put(args, settings):
         sys.exit(1)
 
 
+@handles_encoding_errors
 def bgst_list_notifications(args, settings):
     k, s = get_api_credentials(settings)
     api = BigStashAPI(key=k, secret=s, settings=settings)
     count = 0
     for notification in api.GetNotifications():
         count = count+1
-        print("{}\t{}\t{}\t{}".format(
+        print(u"{}\t{}\t{}\t{}".format(
             notification.created,
             notification.status.upper().ljust(8),
             notification.id,
-            notification.verb.encode('utf-8')
-            ))
+            notification.verb))
         if count >= int(args['--limit']):
             break
 
 
+@handles_encoding_errors
 def bgst_archive_info(args, settings):
     k, s = get_api_credentials(settings)
     api = BigStashAPI(key=k, secret=s, settings=settings)
     archive_id = args['ARCHIVE_ID'].split('-')[0]
     archive = api.GetArchive(archive_id)
-    print('Archive ID:\t{}'.format(archive.key))
-    print('Status:    \t{}'.format(archive.status))
-    print('Created:   \t{}'.format(archive.created))
-    print('Title:     \t{}'.format(archive.title.encode('utf-8')))
-    print('Size:      \t{}'.format(archive.size))
+    print(u'Archive ID:\t{}'.format(archive.key))
+    print(u'Status:    \t{}'.format(archive.status))
+    print(u'Created:   \t{}'.format(archive.created))
+    print(u'Title:     \t{}'.format(archive.title))
+    print(u'Size:      \t{}'.format(archive.size))
 
 
 if __name__ == "__main__":
