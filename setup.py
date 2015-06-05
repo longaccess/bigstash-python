@@ -24,7 +24,8 @@ install_requires = [
     'wrapt',
     'boto3',
     'cached_property',
-    'docopt'
+    'docopt',
+    'inflect'
 ]
 
 

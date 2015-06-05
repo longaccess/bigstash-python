@@ -4,6 +4,7 @@ import re
 import sys
 import os.path
 import posixpath
+import fnmatch
 from functools import partial
 from operator import contains
 
@@ -58,6 +59,20 @@ IGNORE_TESTS = {
 }
 
 
+class FnMatches(object):
+    def __init__(self, patterns=[]):
+        self.patterns = patterns
+
+    def __call__(self, path):
+        return any(map(partial(fnmatch.fnmatch, path), self.patterns))
+
+
+def setup_user_ignore(ignorefile):
+    with open(os.path.expanduser(ignorefile)) as ignorefile:
+        p = list(l.strip() for l in ignorefile if not l.startswith('#'))
+        IGNORE_TESTS['is user ignored'] = FnMatches(p)
+
+
 def splitpath(path):
     _, path = os.path.splitdrive(path)
     folders = []
@@ -91,6 +106,6 @@ def get_validator(tests={}, search={}, match={}):
     return lambda path: ((m, f, p) for p in splitpath(path)
                          for m, f in validators if p != os.sep and f(p))
 
-should_ignore = get_validator(tests=IGNORE_TESTS)
-is_invalid = get_validator(
+should_ignore = lambda: get_validator(tests=IGNORE_TESTS)
+is_invalid = lambda: get_validator(
     search=SEARCH_PATTERNS, match=MATCH_PATTERNS)
