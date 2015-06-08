@@ -1,7 +1,7 @@
 """bgst is a command line client to BigStash.co
 
 Usage:
-  bgst put [-t TITLE] [--silent] [--dont-wait] FILES...
+  bgst put [--ignore-file IGNORE] [-t TITLE] [--silent] [--dont-wait] FILES...
   bgst settings [--user=USERNAME] [--password=PASSWORD]
   bgst settings --reset
   bgst list [--limit=NUMBER]
@@ -22,6 +22,7 @@ Options:
   --reset                       Remove saved configuration, revoke
                                 authentication token.
   --limit=NUMBER                Show up to NUMBER results. [default: 10]
+  --ignore-file=IGNORE           Path to a .gitignore like file.
 """
 
 from __future__ import print_function
@@ -33,8 +34,10 @@ import errno
 import logging
 import posixpath
 import threading
+import inflect
 from wrapt import decorator
 from BigStash import __version__
+from BigStash.filename import setup_user_ignore
 from BigStash.auth import get_api_credentials
 from BigStash.conf import BigStashAPISettings
 from BigStash import BigStashAPI, BigStashError
@@ -44,6 +47,8 @@ from retrying import retry
 from docopt import docopt
 
 log = logging.getLogger('bigstash.upload')
+
+peng = inflect.engine()
 
 
 def smart_str(s):
@@ -195,7 +200,18 @@ def bgst_put(args, settings):
         opt_dont_wait = False if not args['--dont-wait'] else True
         upload = None
         filepaths = map(smart_str, args['FILES'])
-        manifest, errors = Manifest.from_paths(paths=filepaths, title=title)
+        ignorefile = args['--ignore-file']
+        if ignorefile:
+            setup_user_ignore(ignorefile)
+        manifest, errors, ignored = Manifest.from_paths(
+            paths=filepaths, title=title)
+        ignored_msg = ''
+        if ignored:
+            ignored_msg = "({} {} ignored)".format(
+                len(ignored), peng.plural("file", len(ignored)))
+        if len(manifest) == 0:
+            print(" ".join(["No files found", ignored_msg]))
+            sys.exit(5)
         if errors:
             errtext = [": ".join(e) for e in errors]
             print("\n".join(["There were errors:"] + errtext))
@@ -203,8 +219,11 @@ def bgst_put(args, settings):
         k, s = get_api_credentials(settings)
         bigstash = BigStashAPI(key=k, secret=s, settings=settings)
         upload = bigstash.CreateUpload(manifest=manifest)
+        filecount = len(manifest)
         if not opt_silent:
-            print("Uploading {}..".format(upload.archive.key))
+            msg = "Uploading {} {} as archive {}..".format(
+                filecount, peng.plural("file", filecount), upload.archive.key)
+            print(" ".join([msg, ignored_msg]))
         s3 = boto3.resource(
             's3', region_name=upload.s3.region,
             aws_access_key_id=upload.s3.token_access_key,

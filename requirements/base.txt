@@ -22,3 +22,5 @@ retrying==1.3.3
 boto3==0.0.17
 # sha256: SbOoJSgL1ms6qDWF71nEqMgvLIpSLb51SovI0IyFxJE
 docopt==0.6.2
+# sha256: DiNY9PRqVMyj13uYP6NwiwLcg6zY0oRmpn6Ity5cGzQ
+inflect==0.2.5

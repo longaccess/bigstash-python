@@ -4,6 +4,7 @@ import hashlib
 import logging
 import collections
 import os.path
+import six
 from datetime import datetime
 from cached_property import cached_property
 from functools import partial
@@ -78,21 +79,30 @@ class Manifest(models.ModelBase, collections.MutableMapping):
     @classmethod
     def from_paths(cls, paths, title=''):
         errors = []
+        ignored_files = []
 
         def ignored(path, reason, *args):
+            ignored_files.append((path, reason))
             log.debug("Ignoring {}: {}".format(path, reason))
+            return True
 
         def invalid(path, reason, *args):
             errors.append((path, reason))
             log.debug("Invalid file {}: {}".format(path, reason))
+            return True
+
+        validators = {
+            ignored: filename.should_ignore(),
+            invalid: filename.is_invalid()
+        }
 
         def _include_file(path):
             if not os.path.exists(path):
                 return invalid(path, "File doesn't exist")
+            validations = [starmap(partial(c, path), v(path))
+                           for c, v in six.iteritems(validators)]
 
-            return not any(chain(
-                starmap(partial(ignored, path), filename.should_ignore(path)),
-                starmap(partial(invalid, path), filename.is_invalid(path))))
+            return not any(chain(*validations))
 
         def _walk_dirs(paths):
             for path in paths:
@@ -115,4 +125,4 @@ class Manifest(models.ModelBase, collections.MutableMapping):
 
         files = map(_tofile, map(os.path.abspath, _walk_dirs(paths)))
 
-        return (cls(title=title, files=files), errors)
+        return (cls(title=title, files=files), errors, ignored_files)
