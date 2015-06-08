@@ -1,7 +1,7 @@
 """bgst is a command line client to BigStash.co
 
 Usage:
-  bgst put [-i IGNORE] [-t TITLE] [--silent] [--dont-wait] FILES...
+  bgst put [--ignore-file IGNORE] [-t TITLE] [--silent] [--dont-wait] FILES...
   bgst settings [--user=USERNAME] [--password=PASSWORD]
   bgst settings --reset
   bgst list [--limit=NUMBER]
@@ -22,7 +22,7 @@ Options:
   --reset                       Remove saved configuration, revoke
                                 authentication token.
   --limit=NUMBER                Show up to NUMBER results. [default: 10]
-  -i, --ignore=IGNORE           Path to a .gitignore like file.
+  --ignore-file=IGNORE           Path to a .gitignore like file.
 """
 
 from __future__ import print_function
@@ -200,8 +200,9 @@ def bgst_put(args, settings):
         opt_dont_wait = False if not args['--dont-wait'] else True
         upload = None
         filepaths = map(smart_str, args['FILES'])
-        if args['--ignore']:
-            setup_user_ignore(args['--ignore'])
+        ignorefile = args['--ignore-file']
+        if ignorefile:
+            setup_user_ignore(ignorefile)
         manifest, errors, ignored = Manifest.from_paths(
             paths=filepaths, title=title)
         ignored_msg = ''
