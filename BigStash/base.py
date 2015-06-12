@@ -1,5 +1,8 @@
 import time
 import logging
+import logging.handlers
+import os
+import os.path
 
 from BigStash import __version__
 from .conf import BigStashAPISettings
@@ -62,9 +65,27 @@ class BigStashAPIBase(object):
     def setup_logging(cls, settings):
         level = getattr(logging, settings['log_level'])
         logging.basicConfig(level=level)
+        for h in logging.getLogger().handlers:
+            h.level = level
         requests_log = logging.getLogger("requests.packages.urllib3")
         requests_log.setLevel(level)
         requests_log.propagate = True
+        logdir = settings.get_config_file('logs')
+        if not os.path.exists(logdir):
+            os.makedirs(logdir)
+        if not os.path.isdir(logdir):
+            raise Exception("Fatal error: {} is not a directory".format(
+                logdir))
+        bgstlog = logging.getLogger('bigstash')
+        bgstlog.setLevel(logging.INFO)
+        bgstlog.propagate = True
+        fname = os.path.join(logdir, 'bigstash')
+        handler = logging.handlers.RotatingFileHandler(
+            fname, maxBytes=10000, backupCount=5)
+        formatter = logging.Formatter(
+            '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        handler.setFormatter(formatter)
+        bgstlog.addHandler(handler)
         if level == logging.DEBUG:
             from requests.packages.urllib3.connection import HTTPConnection
             HTTPConnection.debuglevel = 1

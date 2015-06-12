@@ -280,9 +280,12 @@ def bgst_put(args, settings):
         err = "error"
         if e.filename is not None:
             err = e.filename
-        print("{}: {}".format(err, e.strerror))
+        msg = "{}: {}".format(err, e.strerror)
+        log.warn(msg, exc_info=True)
+        print(msg)
         sys.exit(3)
     except BigStashError as e:
+        log.warn("oops", exc_info=True)
         print(e)
         sys.exit(2)
     except Exception as e:
