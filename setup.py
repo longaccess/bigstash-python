@@ -68,8 +68,7 @@ setup(version=pep386adapt(versioneer.get_version()),
       cmdclass=versioneer.get_cmdclass(),
       install_requires=install_requires,
       extras_require={
-          'dev': dev_requires,
-          ':python_version=="2.6" or python_version=="2.7"': ['futures']
+          'dev': dev_requires
           },
       entry_points={
           'console_scripts': ['bgst=BigStash.upload:main']
