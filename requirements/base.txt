@@ -1,5 +1,5 @@
 # sha256: HwRtz17HEu076GhLnzPJW3bijNHIJdsPXhVXv9h7N0U
-requests==2.5.1
+requests==2.20.0
 # sha256: QYqTw5en7asj5ViNvAZ6x0pyPts9VBvUk295R252Rdo
 six==1.9.0
 # sha256: 3dO4RIKKRbp92az3nWNC2z6gLzQIeLra1YBeDGSxDpM
